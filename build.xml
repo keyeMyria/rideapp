@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<project name="rideapp" basedir="." default="war">
+    <property file="build.properties"/>
+
+    <property name="target" value="localhost-rideapp"/>
+    <property name="build.dir" value="build"/>
+    <property name="config.dir" value="config"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="src.dir" value="src"/>
+    <property name="web.dir" value="web"/>
+
+    <path id="build-classpath">
+        <fileset dir="${tomcat.dir}/lib">
+            <include name="servlet-api.jar"/>
+        </fileset>
+        <fileset dir="${lib.dir}">
+            <include name="*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build.dir}/classes"/>
+        <javac destdir="${build.dir}/classes"
+                debug="true" deprecation="false"
+                optimize="false" failonerror="true">
+            <src path="${src.dir}"/>
+            <classpath refid="build-classpath"/>
+            <compilerarg value="-Xlint"/>
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile">
+        <jar jarfile="${build.dir}/${ant.project.name}.jar"
+             basedir="${build.dir}/classes"/>
+    </target>
+
+    <target name="war" depends="jar">
+        <mkdir dir="${build.dir}/${target}/WEB-INF/classes"/>
+        <copy file="${config.dir}/${target}.properties"
+              tofile="${build.dir}/${target}/WEB-INF/classes/rideapp.properties"/>
+        <mkdir dir="${dist.dir}"/>
+        <war warfile="${dist.dir}/${target}.war"
+             webxml="${web.dir}/WEB-INF/web.xml">
+            <lib dir="${lib.dir}">
+                <include name="*.jar"/>
+            </lib>
+            <lib dir="${build.dir}">
+                <include name="${ant.project.name}.jar"/>
+            </lib>
+            <webinf dir="${web.dir}/WEB-INF">
+                <include name="**/*"/>
+                <exclude name="*web.xml"/>
+            </webinf>
+            <webinf dir="${build.dir}/${target}/WEB-INF"/>
+            <fileset dir="${web.dir}">
+                <include name="**/*"/>
+                <exclude name="WEB-INF/**/*"/>
+            </fileset>
+        </war>
+    </target>
+
+    <target name="deploy" depends="war">
+        <copy file="${dist.dir}/${target}.war" todir="${tomcat.dir}/webapps"/>
+    </target>
+</project>
