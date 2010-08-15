@@ -32,6 +32,7 @@ import com.yrek.rideapp.rest.RESTAuthFilter;
 import com.yrek.rideapp.rest.RESTAPI;
 import com.yrek.rideapp.servlet.PingServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
+import com.yrek.rideapp.servlet.UploadServlet;
 
 public class Configuration extends GuiceServletContextListener {
     private static final Logger LOG = Logger.getLogger(Configuration.class.getName());
@@ -60,15 +61,16 @@ public class Configuration extends GuiceServletContextListener {
                 filter("*.jsp").through(OAuth2Filter.class);
                 filter("*.jsp").through(SetAttributesFilter.class);
                 filter("/rest/*").through(RESTAuthFilter.class);
-                serve("/ping/*").with(PingServlet.class);
-                serve("/rest/*").with(GuiceContainer.class, new HashMap<String,String>() {
-                    private static final long serialVersionUID = 0L;
+                serve("/ping").with(PingServlet.class);
+                serve("/rest/upload").with(UploadServlet.class);
+                serve("/rest/*").with(GuiceContainer.class, jerseyParams());
+            }
 
-                    {
-                        put("com.sun.jersey.spi.container.ContainerRequestFilters", LoggingFilter.class.getName());
-                        put("com.sun.jersey.spi.container.ContainerResponseFilters", LoggingFilter.class.getName());
-                    }
-                });
+            private HashMap<String,String> jerseyParams() {
+                HashMap<String,String> properties = new HashMap<String,String>();
+                properties.put("com.sun.jersey.spi.container.ContainerRequestFilters", LoggingFilter.class.getName());
+                properties.put("com.sun.jersey.spi.container.ContainerResponseFilters", LoggingFilter.class.getName());
+                return properties;
             }
 
             private void addBindings() {
@@ -88,6 +90,11 @@ public class Configuration extends GuiceServletContextListener {
                 FacebookClient facebookClient = new FacebookClient(oAuth2Session);
                 closeables.add(facebookClient);
                 return facebookClient;
+            }
+
+            @Provides @Singleton
+            SetAttributesFilter provideSetAttributesFilter(FacebookClient facebookClient) {
+                return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"));
             }
         });
     }

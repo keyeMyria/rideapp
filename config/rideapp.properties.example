@@ -6,5 +6,6 @@ facebook.clientSecret=
 facebook.canvasURL=
 
 # Garmin Connect
+garmin.garminUnlock=
 
 # Google Maps

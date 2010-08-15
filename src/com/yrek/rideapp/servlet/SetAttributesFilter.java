@@ -22,7 +22,14 @@ import com.yrek.rideapp.facebook.FacebookClient;
 public class SetAttributesFilter implements Filter {
     private static final Logger LOG = Logger.getLogger(SetAttributesFilter.class.getName());
 
-    @Inject private FacebookClient facebookClient;
+    private final FacebookClient facebookClient;
+    private final String garminUnlock;
+
+    @Inject
+    public SetAttributesFilter(FacebookClient facebookClient, String garminUnlock) {
+        this.facebookClient = facebookClient;
+        this.garminUnlock = garminUnlock;
+    }
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -40,6 +47,7 @@ public class SetAttributesFilter implements Filter {
             session.setAttribute("user", facebookClient.getUser((HttpServletRequest) request));
             session.setAttribute("friends", facebookClient.getFriends((HttpServletRequest) request));
         }
+        request.setAttribute("garminUnlock", garminUnlock);
         filterChain.doFilter(request, response);
     }
 }

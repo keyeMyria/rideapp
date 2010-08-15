@@ -1,0 +1,27 @@
+.hidden {
+    display: none;
+}
+
+.iframe-hidden {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 0px;
+    height: 0px;
+    border: none;
+}
+
+.widget {
+    background-color: #ddf;
+    float: right;
+    font-size: small;
+    border: solid;
+    border-width: 1px;
+    border-color: black;
+    padding: 2px;
+    margin: 4px;
+}
+
+.fineprint {
+    font-size: x-small;
+}
