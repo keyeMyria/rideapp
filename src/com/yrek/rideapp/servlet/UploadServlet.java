@@ -27,19 +27,29 @@ public class UploadServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String uploadStatus = "ok";
+        boolean isFile = true;
         try {
+            isFile = request.getHeader("Content-Type").startsWith("multipart/form-data");
             StringWriter sw = new StringWriter();
-            InputStreamReader in = new InputStreamReader(getPart("file", request.getHeader("Content-Type"), request.getInputStream()));
+            InputStream in = request.getInputStream();
+            if (isFile)
+                in = getPart("file", request.getHeader("Content-Type"), in);
+            InputStreamReader reader = new InputStreamReader(in);
             char[] buffer = new char[8192];
             int count;
-            while ((count = in.read(buffer)) >= 0)
+            while ((count = reader.read(buffer)) >= 0)
                 sw.write(buffer, 0, count);
             LOG.fine("file="+sw);
         } catch (Exception e) {
             LOG.log(Level.SEVERE,"",e);
             uploadStatus = "error";
         }
-        response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/uploadStatus.jsp?uploadStatus=" + uploadStatus));
+        if (isFile) {
+            response.sendRedirect(response.encodeRedirectURL(request.getContextPath() + "/uploadStatus.jsp?uploadStatus=" + uploadStatus));
+        } else {
+            response.setContentType("text/plain");
+            response.getWriter().write(uploadStatus);
+        }
     }
 
     private InputStream getPart(String name, final String contentType, final InputStream inputStream) throws Exception {

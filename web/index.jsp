@@ -23,7 +23,7 @@
 
 </head>
 <body id="body" onload="rideapp.init('${pageContext.request.contextPath}','${sessionId}', ${garminUnlock})">
-<iframe id="iframe-hidden" class="iframe-hidden"></iframe>
+<iframe id="iframe-hidden"></iframe>
 
 <span style="float:right">
   <span id="upload" class="widget">
@@ -34,6 +34,10 @@
         <img src="${pageContext.request.contextPath}/img/working.gif"/>
         uploading file...
       </span>
+      <span id="uploadStatus" class="hidden">
+        <span id="uploadStatusMessage"></span>
+        <input id="uploadStatusButton" type="button" value="Continue"/>
+      </span>
       <span id="uploadReady">
         <input id="uploadFile" type="file" name="file"/>
         <span id="uploadSubmit" class="hidden">
@@ -43,22 +47,27 @@
       </span>
     </form>
   </span>
-  <br/>
+  <br clear="right"/>
   <span class="widget">
-    <span id="nogarmin">
-      Download and install the <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin<a>
+    <span id="garminNoPlugin">
+      Download and install the <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin</a> to upload tracks from your Garmin device.
     </span>
     <span id="garmin" class="hidden">
       <span id="garminReady">
-        Upload track from your Garmin:
+        Upload track from your Garmin device:
         <input id="garminUpload" type="button" value="Upload"/>
       </span>
       <span id="garminBusy" class="hidden">
         <img src="${pageContext.request.contextPath}/img/working.gif"/>
         <span id="garminBusyStatus"></span>
       </span>
+      <span id="garminStatus" class="hidden">
+        <span id="garminStatusMessage"></span>
+        <input id="garminStatusButton" type="button" value="Continue"/>
+      </span>
+      <br/>
       <div class="fineprint">
-        <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin<a> provided by <a href="http://www.garmin.com/">Garmin</a>.
+        <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin</a> provided by <a href="http://www.garmin.com/">Garmin</a>.
       </div>
     </span>
   </span>
