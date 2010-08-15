@@ -2,7 +2,10 @@ package com.yrek.rideapp.facebook;
 
 import java.io.Serializable;
 
+import javax.xml.bind.annotation.XmlElement;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.annotate.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown=true)
 public class User implements Serializable {
@@ -17,6 +20,7 @@ public class User implements Serializable {
     private Integer timezone;
     private String locale;
 
+    @XmlElement
     public String getId() {
         return id;
     }
@@ -25,6 +29,7 @@ public class User implements Serializable {
         this.id = id;
     }
 
+    @XmlElement
     public String getName() {
         return name;
     }
@@ -33,22 +38,29 @@ public class User implements Serializable {
         this.name = name;
     }
 
+    @XmlElement
+    @JsonProperty("first_name")
     public String getFirstName() {
         return firstName;
     }
 
+    @JsonProperty("first_name")
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    @XmlElement
+    @JsonProperty("last_name")
     public String getLastName() {
         return lastName;
     }
 
+    @JsonProperty("last_name")
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    @XmlElement
     public String getLink() {
         return link;
     }
@@ -57,6 +69,7 @@ public class User implements Serializable {
         this.link = link;
     }
 
+    @XmlElement
     public String getGender() {
         return gender;
     }
@@ -65,6 +78,7 @@ public class User implements Serializable {
         this.gender = gender;
     }
 
+    @XmlElement
     public Integer getTimezone() {
         return timezone;
     }
@@ -73,6 +87,7 @@ public class User implements Serializable {
         this.timezone = timezone;
     }
 
+    @XmlElement
     public String getLocale() {
         return locale;
     }
