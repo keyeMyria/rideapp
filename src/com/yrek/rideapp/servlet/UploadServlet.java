@@ -1,11 +1,10 @@
 package com.yrek.rideapp.servlet;
 
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,30 +15,38 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.xml.parsers.SAXParserFactory;
 
+import org.xml.sax.Attributes;
+import org.xml.sax.helpers.DefaultHandler;
+
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
+import com.yrek.rideapp.data.DB;
+import com.yrek.rideapp.facebook.User;
 
 @Singleton
 public class UploadServlet extends HttpServlet {
     private static final long serialVersionUID = 0L;
     private static final Logger LOG = Logger.getLogger(UploadServlet.class.getName());
 
+    @Inject private DB db;
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        String uploadStatus = "ok";
+        String uploadStatus = "error";
         boolean isFile = true;
         try {
             isFile = request.getHeader("Content-Type").startsWith("multipart/form-data");
-            StringWriter sw = new StringWriter();
             InputStream in = request.getInputStream();
             if (isFile)
                 in = getPart("file", request.getHeader("Content-Type"), in);
-            InputStreamReader reader = new InputStreamReader(in);
-            char[] buffer = new char[8192];
-            int count;
-            while ((count = reader.read(buffer)) >= 0)
-                sw.write(buffer, 0, count);
-            LOG.fine("file="+sw);
+            User user = (User) request.getSession().getAttribute("user");
+            if (user == null)
+                uploadStatus = "sessionexpired";
+            else
+                uploadStatus = doUpload(in, user.getId());
         } catch (Exception e) {
             LOG.log(Level.SEVERE,"",e);
             uploadStatus = "error";
@@ -50,6 +57,67 @@ public class UploadServlet extends HttpServlet {
             response.setContentType("text/plain");
             response.getWriter().write(uploadStatus);
         }
+    }
+
+    private String doUpload(InputStream in, String userId) throws Exception {
+        final int maxPoints = db.getMaxPoints(userId);
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        final PrintStream out = new PrintStream(bytes);
+        final String[] status = { "ok" };
+        out.print("[");
+        SAXParserFactory.newInstance().newSAXParser().parse(in, new DefaultHandler() {
+            private int points = 0;
+            private int trkpt = 0;
+            private int time = 0;
+            private String lat = null;
+            private String lon = null;
+            private StringBuilder timeContent = new StringBuilder();
+
+            @Override
+            public void characters(char[] ch, int start, int length) {
+                if (trkpt == 1 && time == 1)
+                    for (int i = 0; i < length; i++)
+                        timeContent.append(ch[i + start]);
+            }
+
+            @Override
+            public void startElement(String uri, String localName, String qName, Attributes attributes) {
+                if ("time".equals(qName)) {
+                    time++;
+                    timeContent.setLength(0);
+                } else if ("trkpt".equals(qName)) {
+                    trkpt++;
+                    lat = attributes.getValue("lat");
+                    lon = attributes.getValue("lon");
+                }
+            }
+
+            @Override
+            public void endElement(String uri, String localName, String qName) {
+                if ("time".equals(qName)) {
+                    time--;
+                } else if ("trkpt".equals(qName)) {
+                    trkpt--;
+                    points++;
+                    if (points > maxPoints) {
+                        status[0] = "tracktruncated";
+                    } else {
+                        if (points > 1)
+                            out.print(",");
+                        out.print("{\"lat\":"+lat+",\"lon\":"+lon+",\"t\":\""+timeContent+"\"}");
+                    }
+                }
+                assert time >= 0;
+                assert trkpt >= 0;
+            }
+        });
+        out.print("]");
+        out.flush();
+        byte[] data = bytes.toByteArray();
+        if (data.length <= 2)
+            return "nodata";
+        db.addTrack(userId, data);
+        return status[0];
     }
 
     private InputStream getPart(String name, final String contentType, final InputStream inputStream) throws Exception {

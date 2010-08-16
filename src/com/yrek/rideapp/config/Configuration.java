@@ -10,6 +10,11 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContextEvent;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -33,6 +38,8 @@ import com.yrek.rideapp.rest.RESTAPI;
 import com.yrek.rideapp.servlet.PingServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
+import com.yrek.rideapp.storage.Storage;
+import com.yrek.rideapp.storage.S3Storage;
 
 public class Configuration extends GuiceServletContextListener {
     private static final Logger LOG = Logger.getLogger(Configuration.class.getName());
@@ -54,7 +61,9 @@ public class Configuration extends GuiceServletContextListener {
 
             @Override
             protected void configureServlets() {
-                addBindings();
+                bind(OAuth2Client.class).to(FacebookOAuth2Client.class);
+                bind(OAuth2Session.class).to(FacebookOAuth2Session.class);
+                bind(Storage.class).to(S3Storage.class);
                 bind(RESTAPI.class);
 
                 serve("/oauth2").with(OAuth2Servlet.class);
@@ -73,28 +82,45 @@ public class Configuration extends GuiceServletContextListener {
                 return properties;
             }
 
-            private void addBindings() {
-                bind(OAuth2Client.class).to(FacebookOAuth2Client.class);
-                bind(OAuth2Session.class).to(FacebookOAuth2Session.class);
-            }
-
             @Provides
             FacebookOAuth2Client provideFacebookOAuth2Client() {
                 FacebookOAuth2Client facebookOAuth2Client = new FacebookOAuth2Client(properties.getProperty("facebook.clientID"), properties.getProperty("facebook.clientSecret"), properties.getProperty("facebook.canvasURL"));
-                closeables.add(facebookOAuth2Client);
+                closeables.add(0, facebookOAuth2Client);
                 return facebookOAuth2Client;
             }
 
             @Provides
             FacebookClient provideFacebookClient(OAuth2Session oAuth2Session) {
                 FacebookClient facebookClient = new FacebookClient(oAuth2Session);
-                closeables.add(facebookClient);
+                closeables.add(0, facebookClient);
                 return facebookClient;
             }
 
             @Provides @Singleton
             SetAttributesFilter provideSetAttributesFilter(FacebookClient facebookClient) {
                 return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"));
+            }
+
+            @Provides @Singleton
+            AWSCredentials provideAWSCredentials() {
+                return new BasicAWSCredentials(properties.getProperty("aws.accessKey"), properties.getProperty("aws.secretKey"));
+            }
+
+            @Provides @Singleton
+            AmazonS3 provideAmazonS3(AWSCredentials credentials) {
+                final AmazonS3Client amazonS3 = new AmazonS3Client(credentials);
+                closeables.add(0, new Closeable() {
+                    @Override
+                    public void close() {
+                        amazonS3.shutdown();
+                    }
+                });
+                return amazonS3;
+            }
+
+            @Provides @Singleton
+            S3Storage provideS3Storage(AmazonS3 amazonS3) {
+                return new S3Storage(amazonS3, properties.getProperty("aws.s3.bucketName"), properties.getProperty("aws.s3.prefix"));
             }
         });
     }

@@ -1,4 +1,8 @@
 # Amazon Web Services
+aws.accessKey=
+aws.secretKey=
+aws.s3.bucketName=
+aws.s3.prefix=
 
 # Facebook
 facebook.clientID=
