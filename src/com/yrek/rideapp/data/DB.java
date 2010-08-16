@@ -53,8 +53,12 @@ public class DB {
         return storage.listFiles(userId + type);
     }
 
-    public byte[] getFile(String userId, String file, String type) {
+    private byte[] getFile(String userId, String file, String type) {
         return storage.readFile(userId + type + file);
+    }
+
+    private void deleteFile(String userId, String file, String type) {
+        storage.deleteFile(userId + type + file);
     }
 
     public void addTrack(String userId, byte[] data) {
@@ -69,6 +73,10 @@ public class DB {
         return getFile(userId, track, "/trk/");
     }
 
+    public void deleteTrack(String userId, String track) {
+        deleteFile(userId, track, "/trk/");
+    }
+
     public void addCourse(String userId, byte[] data) {
         addFile(userId, data, "/crs/", getMaxCourses(userId));
     }
@@ -77,8 +85,12 @@ public class DB {
         return listFiles(userId, "/crs/");
     }
 
-    public byte[] getCourse(String userId, String track) {
-        return getFile(userId, track, "/crs/");
+    public byte[] getCourse(String userId, String course) {
+        return getFile(userId, course, "/crs/");
+    }
+
+    public void deleteCourse(String userId, String course) {
+        deleteFile(userId, course, "/crs/");
     }
 
     public String[] getRivals(String userId) {
