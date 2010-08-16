@@ -44,6 +44,12 @@
         <mkdir dir="${build.dir}/${target}/WEB-INF/classes"/>
         <copy file="${config.dir}/${target}.properties"
               tofile="${build.dir}/${target}/WEB-INF/classes/rideapp.properties"/>
+        <copy todir="${build.dir}/${target}/WEB-INF">
+            <fileset dir="${web.dir}/WEB-INF">
+                <include name="**/*"/>
+                <exclude name="web.xml"/>
+            </fileset>
+        </copy>
         <mkdir dir="${dist.dir}"/>
         <war warfile="${dist.dir}/${target}.war"
              webxml="${web.dir}/WEB-INF/web.xml">
@@ -53,10 +59,6 @@
             <lib dir="${build.dir}">
                 <include name="${ant.project.name}.jar"/>
             </lib>
-            <webinf dir="${web.dir}/WEB-INF">
-                <include name="**/*"/>
-                <exclude name="*web.xml"/>
-            </webinf>
             <webinf dir="${build.dir}/${target}/WEB-INF"/>
             <fileset dir="${web.dir}">
                 <include name="**/*"/>
