@@ -36,6 +36,7 @@ import com.yrek.rideapp.oauth2.OAuth2.OAuth2Servlet;
 import com.yrek.rideapp.rest.RESTAuthFilter;
 import com.yrek.rideapp.rest.RESTAPI;
 import com.yrek.rideapp.servlet.PingServlet;
+import com.yrek.rideapp.servlet.PublicJSPServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
 import com.yrek.rideapp.storage.Storage;
@@ -71,6 +72,7 @@ public class Configuration extends GuiceServletContextListener {
                 filter("*.jsp").through(SetAttributesFilter.class);
                 filter("/rest/*").through(RESTAuthFilter.class);
                 serve("/ping").with(PingServlet.class);
+                serve("/public/*").with(PublicJSPServlet.class);
                 serve("/rest/upload").with(UploadServlet.class);
                 serve("/rest/*").with(GuiceContainer.class, jerseyParams());
             }
