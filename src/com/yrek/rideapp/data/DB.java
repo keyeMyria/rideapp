@@ -96,7 +96,10 @@ public class DB {
     public String[] getRivals(String userId) {
         ArrayList<String> list = new ArrayList<String>();
         StringBuilder sb = new StringBuilder();
-        for (byte b : storage.readFile(userId + "/rvl"))
+        byte[] rvl = storage.readFile(userId + "/rvl");
+        if (rvl == null)
+            return new String[0];
+        for (byte b : rvl)
             if (b == ',') {
                 if (sb.length() > 0)
                     list.add(sb.toString());

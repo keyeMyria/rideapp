@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
@@ -28,7 +30,7 @@ public class S3Storage implements Storage {
     @Override
     public String[] listFiles(String dir) {
         ArrayList<String> files = new ArrayList<String>();
-        ObjectListing objectListing = amazonS3.listObjects(bucketName, prefix + dir);
+        ObjectListing objectListing = amazonS3.listObjects(new ListObjectsRequest(bucketName, prefix + dir, null, "/", 64));
         assert !objectListing.isTruncated();
         for (S3ObjectSummary objectSummary : objectListing.getObjectSummaries())
             files.add(objectSummary.getKey().substring(prefix.length()+dir.length()));
@@ -46,6 +48,10 @@ public class S3Storage implements Storage {
             while ((count = in.read(buffer)) >= 0)
                 bytes.write(buffer, 0, count);
             return bytes.toByteArray();
+        } catch (AmazonServiceException e) {
+            if (e.getStatusCode() == 404)
+                return null;
+            throw e;
         } catch (IOException e) {
             throw new RuntimeException(e);
         } finally {
