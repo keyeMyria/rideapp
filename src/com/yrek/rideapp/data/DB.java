@@ -19,6 +19,11 @@ public class DB {
 
     @Inject private Storage storage;
 
+    private static final String TRACKS = "/trk/";
+    private static final String COURSES = "/crs/";
+    private static final String RIVALS = "/rvl";
+    private static final String HOME = "/h";
+
     private static final SimpleDateFormat timestampFormat;
     static {
         timestampFormat = new SimpleDateFormat("yyyyMMddHHmmssSSS");
@@ -62,41 +67,41 @@ public class DB {
     }
 
     public void addTrack(String userId, byte[] data) {
-        addFile(userId, data, "/trk/", getMaxTracks(userId));
+        addFile(userId, data, TRACKS, getMaxTracks(userId));
     }
 
     public String[] listTracks(String userId) {
-        return listFiles(userId, "/trk/");
+        return listFiles(userId, TRACKS);
     }
 
     public byte[] getTrack(String userId, String track) {
-        return getFile(userId, track, "/trk/");
+        return getFile(userId, track, TRACKS);
     }
 
     public void deleteTrack(String userId, String track) {
-        deleteFile(userId, track, "/trk/");
+        deleteFile(userId, track, TRACKS);
     }
 
     public void addCourse(String userId, byte[] data) {
-        addFile(userId, data, "/crs/", getMaxCourses(userId));
+        addFile(userId, data, COURSES, getMaxCourses(userId));
     }
 
     public String[] listCourses(String userId) {
-        return listFiles(userId, "/crs/");
+        return listFiles(userId, COURSES);
     }
 
     public byte[] getCourse(String userId, String course) {
-        return getFile(userId, course, "/crs/");
+        return getFile(userId, course, COURSES);
     }
 
     public void deleteCourse(String userId, String course) {
-        deleteFile(userId, course, "/crs/");
+        deleteFile(userId, course, COURSES);
     }
 
     public String[] getRivals(String userId) {
         ArrayList<String> list = new ArrayList<String>();
         StringBuilder sb = new StringBuilder();
-        byte[] rvl = storage.readFile(userId + "/rvl");
+        byte[] rvl = storage.readFile(userId + RIVALS);
         if (rvl == null)
             return new String[0];
         for (byte b : rvl)
@@ -123,7 +128,7 @@ public class DB {
             bytes.write(',');
         }
         bytes.write(rival.getBytes());
-        storage.writeFile(userId + "/rvl", bytes.toByteArray());
+        storage.writeFile(userId + RIVALS, bytes.toByteArray());
     }
 
     public void removeRival(String userId, String rival) throws IOException {
@@ -145,6 +150,14 @@ public class DB {
                 comma = true;
                 bytes.write(rivals[i].getBytes());
             }
-        storage.writeFile(userId + "/rvl", bytes.toByteArray());
+        storage.writeFile(userId + RIVALS, bytes.toByteArray());
+    }
+
+    public byte[] getHome(String userId) {
+        return storage.readFile(userId + HOME);
+    }
+
+    public void setHome(String userId, byte[] home) {
+        storage.writeFile(userId + HOME, home);
     }
 }

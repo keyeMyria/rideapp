@@ -34,6 +34,11 @@ public class RESTAPI {
 
     @Inject private DB db;
 
+    public static class Point {
+        public double lat;
+        public double lon;
+    }
+
     public static class Info {
         @XmlElement public int maxPoints;
         @XmlElement public int maxTracks;
@@ -42,15 +47,17 @@ public class RESTAPI {
         @XmlElement public ArrayList<User> rivals;
         @XmlElement public String[] tracks;
         @XmlElement public String[] courses;
+        @XmlElement public Point home;
     }
 
     @GET @Path("/info")
     @Produces(MediaType.APPLICATION_JSON)
-    public Info info(@Context HttpServletRequest request) {
+    public Info info(@Context HttpServletRequest request) throws IOException {
         Info result = limits(request);
         result.rivals = rivals(request);
         result.tracks = tracks(request);
         result.courses = courses(request);
+        result.home = home(request);
         return result;
     }
 
@@ -78,6 +85,22 @@ public class RESTAPI {
         return result;
     }
 
+    @GET @Path("/home")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Point home(@Context HttpServletRequest request) throws IOException {
+        User user = user(request);
+        byte[] home = db.getHome(user.getId());
+        if (home == null)
+            return null;
+        return objectMapper.readValue(home, 0, home.length, Point.class);
+    }
+
+    @PUT @Path("/home")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void home(@Context HttpServletRequest request, Point home) throws IOException {
+        db.setHome(user(request).getId(), objectMapper.writeValueAsBytes(home));
+    }
+
     @GET @Path("/rivals")
     @Produces(MediaType.APPLICATION_JSON)
     public ArrayList<User> rivals(@Context HttpServletRequest request) {
@@ -94,8 +117,9 @@ public class RESTAPI {
         return result;
     }
 
-    @PUT @Path("/rival/{id}")
-    public void addRival(@Context HttpServletRequest request, @PathParam("id") String id) throws IOException {
+    @POST @Path("/rival/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ArrayList<User> addRival(@Context HttpServletRequest request, @PathParam("id") String id) throws IOException {
         User user = user(request);
         User[] friends = friends(request);
         for (User friend : friends)
@@ -103,6 +127,7 @@ public class RESTAPI {
                 db.addRival(user.getId(), id);
                 break;
             }
+        return rivals(request);
     }
 
     @DELETE @Path("/rival/{id}")
@@ -127,14 +152,9 @@ public class RESTAPI {
         db.deleteTrack(user(request).getId(), id);
     }
 
-    public static class CoursePoint {
-        public double lat;
-        public double lon;
-    }
-
     public static class Course {
         public String description;
-        public CoursePoint[] points;
+        public Point[] points;
     }
 
     @GET @Path("/courses")
@@ -151,8 +171,10 @@ public class RESTAPI {
 
     @POST @Path("/course")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void addCourse(@Context HttpServletRequest request, Course course) throws IOException {
+    @Produces(MediaType.APPLICATION_JSON)
+    public String[] addCourse(@Context HttpServletRequest request, Course course) throws IOException {
         db.addCourse(user(request).getId(), objectMapper.writeValueAsBytes(course));
+        return courses(request);
     }
 
     @DELETE @Path("/course/{id}")
