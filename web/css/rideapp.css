@@ -1,7 +1,3 @@
-.hidden {
-    display: none;
-}
-
 .widget {
     width: 240px;
     background-color: #ddf;
@@ -16,4 +12,33 @@
 
 .fineprint {
     font-size: x-small;
+}
+
+#chooseRival {
+    position: absolute;
+    top: 50px;
+    left: 100px;
+    width: 450px;
+    background-color: white;
+    border: solid;
+    border-width: 2px;
+    border-color: black;
+}
+
+.chooseItem {
+    text-align: right;
+    color: #444;
+}
+
+.chooseItem span {
+    visibility: hidden;
+    cursor: pointer;
+}
+
+.chooseItem:hover span {
+    visibility: visible;
+}
+
+.chooseList tr:hover {
+    background-color: #ffc;
 }

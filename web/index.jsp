@@ -30,17 +30,17 @@
     <form id="uploadForm" target="iframe-hidden"
           action="${pageContext.request.contextPath}/rest/upload;jsessionid=${sessionId}"
           method="POST" enctype="multipart/form-data">Upload gpx file:
-      <span id="uploadBusy" class="hidden">
+      <span id="uploadBusy" style="display:none;">
         <img src="${pageContext.request.contextPath}/img/working.gif"/>
         uploading file...
       </span>
-      <span id="uploadStatus" class="hidden">
+      <span id="uploadStatus" style="display:none;">
         <span id="uploadStatusMessage"></span>
         <input id="uploadStatusButton" type="button" value="Continue"/>
       </span>
       <span id="uploadReady">
         <input id="uploadFile" type="file" name="file"/>
-        <span id="uploadSubmit" class="hidden">
+        <span id="uploadSubmit" style="display:none;">
           <input type="submit" value="Upload"/>
           <input type="button" id="uploadCancel" value="Cancel"/>
         </span>
@@ -52,16 +52,16 @@
     <span id="garminNoPlugin">
       Download and install the <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin</a> to upload tracks from your Garmin device.
     </span>
-    <span id="garmin" class="hidden">
+    <span id="garmin" style="display:none;">
       <span id="garminReady">
         Upload track from your Garmin device:
         <input id="garminUpload" type="button" value="Upload"/>
       </span>
-      <span id="garminBusy" class="hidden">
+      <span id="garminBusy" style="display:none;">
         <img src="${pageContext.request.contextPath}/img/working.gif"/>
         <span id="garminBusyStatus"></span>
       </span>
-      <span id="garminStatus" class="hidden">
+      <span id="garminStatus" style="display:none;">
         <span id="garminStatusMessage"></span>
         <input id="garminStatusButton" type="button" value="Continue"/>
       </span>
@@ -71,7 +71,38 @@
       </div>
     </span>
   </span>
+  <br clear="right"/>
+  <span class="widget">
+    <span id="rivalsNoRivals">You have no rivals.</span>
+    <span id="rivals" style="display:none;">
+      <table cellspacing="0"><tbody id="rivalList" class="chooseList"></tbody></table>
+    </span>
+    <br/>
+    <input id="rivalAddRival" type="button" value="Add rival" disabled="true"/>
+    <img id="rivalBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
+  </span>
 </span>
+
+<table id="chooseRival" style="display:none;" cellspacing="0">
+  <tbody id="chooseRivalList" class="chooseList"></tbody>
+  <tbody>
+    <tr>
+      <td>
+        <span id="chooseRivalPrevDisabled">&lt;-prev</span>
+        <a id="chooseRivalPrev" href="javascript:;">&lt;-prev</a>
+      </td>
+      <td align="right">
+        <span id="chooseRivalNextDisabled">next-&gt;</span>
+        <a id="chooseRivalNext" href="javascript:;">next-&gt;</a>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center">
+        <a id="chooseRivalCancel" href="javascript:;">cancel</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <div id="1"></div>
 sessionId=${sessionId}
