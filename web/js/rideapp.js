@@ -23,13 +23,18 @@ var rideapp = (function($) {
                 $(ul).append(li);
                 $(li).text(data[i].name);
             }
+            $.getJSON(getURI("/rest/info"), function() {});
         });
     }
 
     function initUploadFile() {
         $("#uploadFile").change(function() {
-            $("#upload").attr("action",getURI("/upload"));
-            $("#uploadSubmit").removeClass("hidden");
+            $("#iframe-hidden").queue("refreshSessionId", function(next) {
+                $("#upload").attr("action",getURI("/upload"));
+                $("#uploadSubmit").removeClass("hidden");
+                next();
+            });
+            $("#iframe-hidden").attr("src",getURI("/refreshSession.jsp"));
         });
         $("#uploadForm").submit(function() {
             $("#uploadBusy").removeClass("hidden");
@@ -50,6 +55,8 @@ var rideapp = (function($) {
     function setUploadStatus(status) {
         if (status == "ok")
             $("#uploadStatusMessage").text("Upload succeeded: " + $("#uploadFile").val());
+        else if (status == "tracktruncated")
+            $("#uploadStatusMessage").text("Upload succeeded (truncated): " + $("#uploadFile").val());
         else
             $("#uploadStatusMessage").text("There was an error uploading " + $("#uploadFile").val());
         $("#uploadSubmit").addClass("hidden");
@@ -115,7 +122,12 @@ var rideapp = (function($) {
             contentType:"application/gpx",
             dataType:"text",
             success:function(status) {
-                garminStatus("Upload done: " + status);
+                if (status == "ok")
+                    garminStatus("Upload succeeded");
+                else if (status == "tracktruncated")
+                    garminStatus("Upload succeeded (truncated)");
+                else
+                    garminStatus("Upload failed");
             },
             error:function(xhr,status) {
                 if (xhr.status != 403)
