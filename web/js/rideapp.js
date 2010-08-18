@@ -4,6 +4,8 @@ var rideapp = (function($) {
     var garminUnlock;
 
     var info;
+    var map;
+    var tracks = {};
 
     function getURI(path) {
         return contextPath + path + ";jsessionid=" + sessionId;
@@ -33,6 +35,10 @@ var rideapp = (function($) {
         ajax("GET", path, success, error);
     }
 
+    function formatTimestamp(timestamp) {
+        return timestamp;
+    }
+
     function init(initContextPath, initSessionId, initGarminUnlock) {
         contextPath = initContextPath;
         sessionId = initSessionId;
@@ -43,8 +49,24 @@ var rideapp = (function($) {
 
         getJSON("/rest/info", function(newInfo) {
             info = newInfo;
+            setTracks();
             setRivals();
+            var options = { mapTypeId: google.maps.MapTypeId.ROADMAP };
+            if (info.home) {
+                options.zoom = 12;
+                options.center = new google.maps.LatLng(info.home.lat, info.home.lon);
+            } else {
+                options.zoom = 3;
+                options.center = new google.maps.LatLng(39,-98);
+            }
+            map = new google.maps.Map(document.getElementById("map"), options);
+            $("#map").show();
         });
+    }
+
+    function removeMapOverlays() {
+        for (var i = 0; i < info.tracks.length; i++)
+            tracks[info.tracks[i]].overlay.setMap(null);
     }
 
     function initUploadFile() {
@@ -83,6 +105,10 @@ var rideapp = (function($) {
         $("#uploadBusy").hide();
         $("#uploadStatus").show();
         $("#uploadFile").val(null);
+        getJSON("/rest/tracks", function(tracks) {
+            info.tracks = tracks;
+            setTracks();
+        });
     }
 
     var garminControl;
@@ -142,6 +168,10 @@ var rideapp = (function($) {
                 garminStatus("Upload succeeded (truncated)");
             else
                 garminStatus("Upload failed");
+            getJSON("/rest/tracks", function(tracks) {
+                info.tracks = tracks;
+                setTracks();
+            });
         }, function(xhr, status) {
             garminStatus("Upload failed: " + xhr.statusText);
         }, data.controller.gpsDataString, "application/gpx");
@@ -154,6 +184,91 @@ var rideapp = (function($) {
         $("#garminStatus").show();
     }
 
+    function setTracks() {
+        if (!info.tracks || info.tracks.length == 0) {
+            $("#tracksNoTracks").show();
+            $("#tracks").hide();
+            return;
+        }
+        $("#tracksNoTracks").hide();
+        $("#tracks").show();
+        $("#trackList").empty();
+        var trackToFetch = null;
+        for (var i = 0; i < info.tracks.length; i++) {
+            var tr = document.createElement("tr");
+            $("#trackList").append(tr);
+            var td = document.createElement("td");
+            $(tr).append(td);
+            if (tracks[info.tracks[i]]) {
+                $(td).text(formatTimestamp(tracks[info.tracks[i]].pts[0].t));
+                $(td).click((function(track) {
+                    return function() {
+                        removeMapOverlays();
+                        track.overlay.setMap(map);
+                        map.fitBounds(track.bounds);
+                    };
+                })(tracks[info.tracks[i]]));
+            } else {
+                var img = document.createElement("img");
+                $(td).append(img);
+                $(img).attr("src",contextPath+"/img/working.gif");
+                if (!trackToFetch)
+                    trackToFetch = info.tracks[i];
+            }
+            td = document.createElement("td");
+            $(tr).append(td);
+            $(td).addClass("chooseItem");
+            var span = document.createElement("span");
+            $(td).append(span);
+            $(span).text("delete");
+            $(span).click((function(index) {
+                return function() {
+                    ajax("DELETE", "/rest/track/"+info.tracks[index], function() {
+                        tracks[info.tracks[index]].overlay.setMap(null);
+                        tracks[info.tracks[index]] = null;
+                        info.tracks.splice(index,1);
+                        setTracks();
+                    });
+                };
+            })(i));
+        }
+        if (trackToFetch) {
+            getJSON("/rest/track/" + trackToFetch, (function(id) {
+                return function(trackData) {
+                    var pts = [];
+                    var minLat, maxLat, minLon, maxLon;
+                    minLat = trackData[0].lat;
+                    maxLat = trackData[0].lat;
+                    minLon = trackData[0].lon;
+                    maxLon = trackData[0].lon;
+                    for (var i = 0; i < trackData.length; i++) {
+                        pts.push(new google.maps.LatLng(trackData[i].lat, trackData[i].lon));
+                        minLat = Math.min(minLat, trackData[i].lat);
+                        maxLat = Math.max(maxLat, trackData[i].lat);
+                        minLon = Math.min(minLon, trackData[i].lon);
+                        maxLon = Math.max(maxLon, trackData[i].lon);
+                    }
+                    tracks[id] = {
+                        pts:trackData,
+                        bounds:new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)),
+                        overlay:new google.maps.Polyline({
+                            path:pts,
+                            strokeColor:"#FF00FF",
+                            strokeOpacity:0.9,
+                            strokeWeight:3
+                        })
+                    };
+                    setTracks();
+                    if (!info.home && map.getZoom() == 3) {
+                        info.home = trackData[0];
+                        map.setCenter(pts[0]);
+                        map.setZoom(12);
+                    }
+                };
+            })(trackToFetch));
+        }
+    }
+
     function setRivals() {
         $("#rivalAddRival").show();
         $("#rivalBusy").hide();
@@ -163,7 +278,7 @@ var rideapp = (function($) {
             $("#rivals").hide();
             $("#rivalAddRival").removeAttr("disabled");
         } else {
-            for (var i in info.rivals) {
+            for (var i = 0; i < info.rivals.length; i++) {
                 var tr = document.createElement("tr");
                 $("#rivalList").append(tr);
                 var td = document.createElement("td");
@@ -175,11 +290,19 @@ var rideapp = (function($) {
                 var span = document.createElement("span");
                 $(td).append(span);
                 $(span).text("remove");
-                $(span).click((function(id) {
+                $(span).click((function(index) {
                     return function() {
-                        alert("remove rival:"+id);
+                        $("#rivalAddRival").hide();
+                        $("#rivalBusy").show();
+                        ajax("DELETE", "/rest/rival/"+info.rivals[index].id, function() {
+                            info.rivals.splice(index,1);
+                            setRivals();
+                        }, function() {
+                            $("#rivalAddRival").show();
+                            $("#rivalBusy").hide();
+                        });
                     };
-                })(info.rivals[i].id));
+                })(i));
             }
             $("#rivalsNoRivals").hide();
             $("#rivals").show();
@@ -206,8 +329,8 @@ var rideapp = (function($) {
 
     function chooseRival(index) {
         function isRival(id) {
-            for (var i in info.rivals)
-                if (info.rivals.id == id)
+            for (var i = 0; i < info.rivals.length; i++)
+                if (info.rivals[i].id == id)
                     return true;
             return false;
         }
@@ -231,7 +354,11 @@ var rideapp = (function($) {
             $(span).text("add as rival");
             $(span).click((function(id) {
                 return function() {
-                    alert("add as rival:"+id);
+                    $("#chooseRival").hide();
+                    ajax("POST", "/rest/rival/"+id, function(rivals) {
+                        info.rivals = rivals;
+                        setRivals();
+                    }, setRivals);
                 };
             })(info.friends[index + i].id));
         }

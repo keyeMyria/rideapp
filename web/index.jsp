@@ -19,6 +19,8 @@
 <script type="text/javascript" src="http://developer.garmin.com/web/communicator-api-1.7/garmin/device/GarminDevicePlugin.js"></script>
 <script type="text/javascript" src="http://developer.garmin.com/web/communicator-api-1.7/garmin/device/GarminDeviceControl.js"></script> 
 
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
 </head>
@@ -73,15 +75,30 @@
   </span>
   <br clear="right"/>
   <span class="widget">
+    <span id="tracksNoTracks">You have no uploaded tracks.</span>
+    <span id="tracks" style="display:none;">
+      <table style="width:100%;" cellspacing="0">
+        <tbody><tr><td colspan="2">Your tracks:</td></tr></tbody>
+        <tbody id="trackList" class="chooseList"></tbody>
+      </table>
+    </span>
+  </span>
+  <br clear="right"/>
+  <span class="widget">
     <span id="rivalsNoRivals">You have no rivals.</span>
     <span id="rivals" style="display:none;">
-      <table cellspacing="0"><tbody id="rivalList" class="chooseList"></tbody></table>
+      <table style="width:100%;" cellspacing="0">
+        <tbody><tr><td colspan="2">Your rivals:</td></tr></tbody>
+        <tbody id="rivalList" class="chooseList"></tbody>
+      </table>
     </span>
     <br/>
     <input id="rivalAddRival" type="button" value="Add rival" disabled="true"/>
     <img id="rivalBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
   </span>
 </span>
+
+<div id="map" style="display:none;"></div>
 
 <table id="chooseRival" style="display:none;" cellspacing="0">
   <tbody id="chooseRivalList" class="chooseList"></tbody>
@@ -104,9 +121,5 @@
   </tbody>
 </table>
 
-<div id="1"></div>
-sessionId=${sessionId}
-user.id=${sessionScope.user.id}
-user.name=${sessionScope.user.name}
 </body>
 </html>

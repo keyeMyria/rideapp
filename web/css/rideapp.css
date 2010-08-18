@@ -14,20 +14,9 @@
     font-size: x-small;
 }
 
-#chooseRival {
-    position: absolute;
-    top: 50px;
-    left: 100px;
-    width: 450px;
-    background-color: white;
-    border: solid;
-    border-width: 2px;
-    border-color: black;
-}
-
 .chooseItem {
     text-align: right;
-    color: #444;
+    color: #888;
 }
 
 .chooseItem span {
@@ -41,4 +30,20 @@
 
 .chooseList tr:hover {
     background-color: #ffc;
+}
+
+#chooseRival {
+    position: absolute;
+    top: 50px;
+    left: 100px;
+    width: 450px;
+    background-color: white;
+    border: solid;
+    border-width: 2px;
+    border-color: black;
+}
+
+#map {
+    width: 480px;
+    height: 300px;
 }
