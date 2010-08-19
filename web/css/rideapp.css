@@ -49,6 +49,25 @@
 }
 
 #map {
-    width: 480px;
+    width: 470px;
     height: 300px;
+}
+
+#makeCourse {
+    position: absolute;
+    top: 30px;
+    left: 50px;
+    width: 650px;
+    background-color: white;
+    border: solid;
+    border-width: 2px;
+    border-color: black;
+}
+
+#makeCourseMap {
+    width: 650px;
+    height: 400px;
+}
+
+.instructions {
 }

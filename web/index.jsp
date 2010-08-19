@@ -85,33 +85,31 @@
   </span>
   <br clear="right"/>
   <span class="widget" title="105">
-    <span id="coursesNoCourses">You have no courses.</span>
+    <span id="coursesNoCourses">You have no courses.<br/></span>
     <span id="courses" style="display:none;">
       <table style="width:100%;" cellspacing="0">
         <tbody><tr><td colspan="2">Your courses:</td></tr></tbody>
         <tbody id="courseList" class="chooseList"></tbody>
       </table>
     </span>
-    <br/>
     <input id="courseAddCourse" type="button" value="Add course" disabled="true"/>
     <img id="courseBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
   </span>
   <br clear="right"/>
   <span class="widget" title="Rival">
-    <span id="rivalsNoRivals">You have no rivals.</span>
+    <span id="rivalsNoRivals">You have no rivals.<br/></span>
     <span id="rivals" style="display:none;">
       <table style="width:100%;" cellspacing="0">
         <tbody><tr><td colspan="2">Your rivals:</td></tr></tbody>
         <tbody id="rivalList" class="chooseList"></tbody>
       </table>
     </span>
-    <br/>
     <input id="rivalAddRival" type="button" value="Add rival" disabled="true"/>
     <img id="rivalBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
   </span>
 </span>
 
-<div id="map" style="display:none;"></div>
+<div id="map"></div>
 
 <table id="chooseRival" style="display:none;" cellspacing="0" title="Rival">
   <tbody id="chooseRivalList" class="chooseList"></tbody>
@@ -131,6 +129,20 @@
     </tr>
   </tbody>
 </table>
+
+<div id="makeCourse" style="display:none;">
+  <div title="105">
+    Make a course:
+    <div class="instructions">Click on the map to add a checkpoint.  The
+    first checkpoint is the start point.  Double click on a checkpoint
+    to delete it.  Drag the checkpoint to move it.</div>
+    Name: <input id="makeCourseName" type="text"/>
+    Loop: <input id="makeCourseLoop" type="checkbox"/>
+    <input id="makeCourseAdd" type="button" value="Add course" disabled="true"/>
+    <input id="makeCourseCancel" type="button" value="Cancel"/>
+  </div>
+  <div id="makeCourseMap"></div>
+</div>
 
 </body>
 </html>

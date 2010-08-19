@@ -48,6 +48,7 @@ public class RESTAPI {
     public static class Course {
         public String id;
         public String name;
+        public boolean loop;
         public Point[] points;
     }
 

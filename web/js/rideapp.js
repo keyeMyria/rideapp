@@ -6,6 +6,7 @@ var rideapp = (function($) {
     var info;
     var map;
     var tracks = {};
+    var makeCourseMap;
 
     function getURI(path) {
         return contextPath + path + ";jsessionid=" + sessionId;
@@ -48,21 +49,24 @@ var rideapp = (function($) {
         initUploadFile();
         initGarmin();
 
-        getJSON("/rest/info", function(newInfo) {
-            info = newInfo;
-            setTracks();
-            setRivals();
-            var options = { mapTypeId: google.maps.MapTypeId.ROADMAP };
+        map = new google.maps.Map(document.getElementById("map"), { mapTypeId:google.maps.MapTypeId.ROADMAP, zoom:3, center:new google.maps.LatLng(39,-98) });
+        getJSON("/rest/info", initInfo);
+    }
+
+    function initInfo(newInfo) {
+        info = newInfo;
+        setTracks();
+        setRivals();
+        if (map.getZoom() == 3) {
             if (info.home) {
-                options.zoom = 12;
-                options.center = new google.maps.LatLng(info.home.lat, info.home.lon);
-            } else {
-                options.zoom = 3;
-                options.center = new google.maps.LatLng(39,-98);
+                map.setCenter(new google.maps.LatLng(info.home.lat, info.home.lon));
+                map.setZoom(12);
+            } else if (info.courses.length > 0) {
+                map.setCenter(new google.maps.LatLng(info.courses[0].points[0].lat, info.courses[0].points[0].lon));
+                map.setZoom(12);
             }
-            map = new google.maps.Map(document.getElementById("map"), options);
-            $("#map").show();
-        });
+        }
+        setCourses();
     }
 
     function removeMapOverlays() {
@@ -315,8 +319,6 @@ var rideapp = (function($) {
                 $("#rivalAddRival").attr("disabled", "true");
         }
         $("#rivalAddRival").click(function() {
-            $("#rivalAddRival").hide();
-            $("#rivalBusy").show();
             if (info.friends)
                 chooseRival(0);
             else
@@ -338,7 +340,7 @@ var rideapp = (function($) {
             return false;
         }
 
-        var batchSize = 5;
+        var batchSize = 10;
         $("#chooseRival").show();
         $("#chooseRivalList").empty();
         var i;
@@ -359,6 +361,8 @@ var rideapp = (function($) {
             $(td).click((function(id) {
                 return function() {
                     $("#chooseRival").hide();
+                    $("#rivalAddRival").hide();
+                    $("#rivalBusy").show();
                     ajax("POST", "/rest/rival/"+id, function(rivals) {
                         info.rivals = rivals;
                         setRivals();
@@ -393,6 +397,68 @@ var rideapp = (function($) {
             $("#rivalBusy").hide();
             $("#rivalAddRival").show();
         });
+    }
+
+    function setCourses() {
+        $("#courseAddCourse").show();
+        $("#courseBusy").hide();
+        $("#courseList").empty();
+        if (!info.courses || info.courses.length == 0) {
+            $("#coursesNoCourses").show();
+            $("#courses").hide();
+            $("#courseAddCourse").removeAttr("disabled");
+        } else {
+            for (var i = 0; i < info.courses.length; i++) {
+                var tr = document.createElement("tr");
+                $("#courseList").append(tr);
+                var td = document.createElement("td");
+                $(tr).append(td);
+                $(td).addClass("chooseItem");
+                $(td).text(info.courses[i].name);
+                $(td).click(function() { alert("under construction"); });
+                td = document.createElement("td");
+                $(tr).append(td);
+                $(td).addClass("chooseItemRight");
+                var span = document.createElement("span");
+                $(td).append(span);
+                $(span).text("remove");
+                $(span).click((function(index) {
+                    return function() {
+                        $("#courseAddCourse").hide();
+                        $("#courseBusy").show();
+                        ajax("DELETE", "/rest/course/"+info.courses[index].id, function() {
+                            info.courses.splice(index,1);
+                            setCourses();
+                        }, function() {
+                                $("#courseAddCourse").show();
+                                $("#courseBusy").hide();
+                        });
+                    };
+                })(i));
+            }
+            $("#couseNoCourses").hide();
+            $("#courses").show();
+            if (info.courses.length < info.maxCourses)
+                $("#courseAddCourse").removeAttr("disabled");
+            else
+                $("#courseAddCourse").attr("disabled", "true");
+        }
+        $("#courseAddCourse").click(showMakeCourse);
+    }
+
+    function showMakeCourse() {
+        $("#makeCourseName").val("");
+        $("#makeCourseLoop").val(null);
+        //...
+        $("#makeCourseCancel").click(function() {
+            $("#makeCourse").hide();
+        });
+        $("#makeCourse").show();
+        if (!makeCourseMap) {
+            makeCourseMap = new google.maps.Map(document.getElementById("makeCourseMap"), { mapTypeId:google.maps.MapTypeId.ROADMAP, zoom:3, center:new google.maps.LatLng(39,-98) });
+        }
+        makeCourseMap.setCenter(map.getCenter());
+        makeCourseMap.setZoom(14);
     }
 
     function refreshSessionId(newSessionId) {
