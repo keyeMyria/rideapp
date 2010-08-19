@@ -60,7 +60,7 @@ public class UploadServlet extends HttpServlet {
     }
 
     private String doUpload(InputStream in, String userId) throws Exception {
-        final int maxPoints = db.getMaxPoints(userId);
+        final int maxTrackPoints = db.getMaxTrackPoints(userId);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         final PrintStream out = new PrintStream(bytes);
         final String[] status = { "ok" };
@@ -99,7 +99,7 @@ public class UploadServlet extends HttpServlet {
                 } else if ("trkpt".equals(qName)) {
                     trkpt--;
                     points++;
-                    if (points > maxPoints) {
+                    if (points > maxTrackPoints) {
                         status[0] = "tracktruncated";
                     } else {
                         if (points > 1)

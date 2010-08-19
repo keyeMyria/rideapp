@@ -30,8 +30,12 @@ public class DB {
         timestampFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    public int getMaxPoints(String userId) {
+    public int getMaxTrackPoints(String userId) {
         return 1000;
+    }
+
+    public int getMaxCoursePoints(String userId) {
+        return 10;
     }
 
     public int getMaxTracks(String userId) {
@@ -46,12 +50,14 @@ public class DB {
         return 5;
     }
 
-    private void addFile(String userId, byte[] data, String type, int maxFiles) {
+    private String addFile(String userId, byte[] data, String type, int maxFiles) {
         String[] files = storage.listFiles(userId + type);
         if (files.length >= maxFiles)
             for (int i = 0; i < files.length - maxFiles + 1; i++)
                 storage.deleteFile(userId + type + files[i]);
-        storage.writeFile(userId + type + timestampFormat.format(new Date()), data);
+        String id = timestampFormat.format(new Date());
+        storage.writeFile(userId + type + id, data);
+        return id;
     }
 
     private String[] listFiles(String userId, String type) {
@@ -66,8 +72,8 @@ public class DB {
         storage.deleteFile(userId + type + file);
     }
 
-    public void addTrack(String userId, byte[] data) {
-        addFile(userId, data, TRACKS, getMaxTracks(userId));
+    public String addTrack(String userId, byte[] data) {
+        return addFile(userId, data, TRACKS, getMaxTracks(userId));
     }
 
     public String[] listTracks(String userId) {
@@ -82,8 +88,8 @@ public class DB {
         deleteFile(userId, track, TRACKS);
     }
 
-    public void addCourse(String userId, byte[] data) {
-        addFile(userId, data, COURSES, getMaxCourses(userId));
+    public String addCourse(String userId, byte[] data) {
+        return addFile(userId, data, COURSES, getMaxCourses(userId));
     }
 
     public String[] listCourses(String userId) {

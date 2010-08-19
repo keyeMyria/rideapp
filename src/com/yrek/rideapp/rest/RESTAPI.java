@@ -20,7 +20,9 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.google.inject.Inject;
 
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.yrek.rideapp.data.DB;
 import com.yrek.rideapp.facebook.User;
@@ -31,6 +33,10 @@ public class RESTAPI {
     private static final Logger LOG = Logger.getLogger(RESTAPI.class.getName());
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    {
+        objectMapper.getDeserializationConfig().disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
+        objectMapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+    }
 
     @Inject private DB db;
 
@@ -39,14 +45,21 @@ public class RESTAPI {
         public double lon;
     }
 
+    public static class Course {
+        public String id;
+        public String name;
+        public Point[] points;
+    }
+
     public static class Info {
-        @XmlElement public int maxPoints;
+        @XmlElement public int maxTrackPoints;
+        @XmlElement public int maxCoursePoints;
         @XmlElement public int maxTracks;
         @XmlElement public int maxCourses;
         @XmlElement public int maxRivals;
         @XmlElement public ArrayList<User> rivals;
         @XmlElement public String[] tracks;
-        @XmlElement public String[] courses;
+        @XmlElement public ArrayList<Course> courses;
         @XmlElement public Point home;
     }
 
@@ -78,7 +91,8 @@ public class RESTAPI {
     public Info limits(@Context HttpServletRequest request) {
         User user = user(request);
         Info result = new Info();
-        result.maxPoints = db.getMaxPoints(user.getId());
+        result.maxTrackPoints = db.getMaxTrackPoints(user.getId());
+        result.maxCoursePoints = db.getMaxCoursePoints(user.getId());
         result.maxTracks = db.getMaxTracks(user.getId());
         result.maxCourses = db.getMaxCourses(user.getId());
         result.maxRivals = db.getMaxRivals(user.getId());
@@ -152,15 +166,18 @@ public class RESTAPI {
         db.deleteTrack(user(request).getId(), id);
     }
 
-    public static class Course {
-        public String description;
-        public Point[] points;
-    }
-
     @GET @Path("/courses")
     @Produces(MediaType.APPLICATION_JSON)
-    public String[] courses(@Context HttpServletRequest request) {
-        return db.listCourses(user(request).getId());
+    public ArrayList<Course> courses(@Context HttpServletRequest request) throws IOException {
+        String userId = user(request).getId();
+        ArrayList<Course> courses = new ArrayList<Course>();
+        for (String id : db.listCourses(userId)) {
+            byte[] bytes = db.getCourse(userId, id);
+            Course course = objectMapper.readValue(bytes, 0, bytes.length, Course.class);
+            course.id = id;
+            courses.add(course);
+        }
+        return courses;
     }
 
     @GET @Path("/course/{id}")
@@ -172,9 +189,17 @@ public class RESTAPI {
     @POST @Path("/course")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String[] addCourse(@Context HttpServletRequest request, Course course) throws IOException {
-        db.addCourse(user(request).getId(), objectMapper.writeValueAsBytes(course));
-        return courses(request);
+    public Course addCourse(@Context HttpServletRequest request, Course course) throws IOException {
+        String userId = user(request).getId();
+        int maxCoursePoints = db.getMaxCoursePoints(userId);
+        if (course.points.length > maxCoursePoints) {
+            Point[] points = new Point[maxCoursePoints];
+            System.arraycopy(course.points, 0, points, 0, maxCoursePoints);
+            course.points = points;
+        }
+        course.id = null;
+        course.id = db.addCourse(userId, objectMapper.writeValueAsBytes(course));
+        return course;
     }
 
     @DELETE @Path("/course/{id}")
