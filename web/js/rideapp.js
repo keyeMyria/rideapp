@@ -26,6 +26,7 @@ var rideapp = (function($) {
                         ajax(method, path, success, error, data, contentType);
                         next();
                     });
+                    $("#iframe-hidden").attr("src",getURI("/refreshSession.jsp"));
                 }
             }
         });
@@ -72,7 +73,7 @@ var rideapp = (function($) {
     function initUploadFile() {
         $("#uploadFile").change(function() {
             $("#iframe-hidden").queue("refreshSessionId", function(next) {
-                $("#uploadForm").attr("action",getURI("/upload"));
+                $("#uploadForm").attr("action",getURI("/rest/upload"));
                 $("#uploadSubmit").show();
                 next();
             });
