@@ -28,7 +28,7 @@
 <iframe id="iframe-hidden" style="position:absolute; top:0px; left:0px; width: 0px; height: 0px; border: none;"></iframe>
 
 <span style="float:right">
-  <span id="upload" class="widget">
+  <span class="widget" title="Record">
     <form id="uploadForm" target="iframe-hidden"
           action="${pageContext.request.contextPath}/rest/upload;jsessionid=${sessionId}"
           method="POST" enctype="multipart/form-data">Upload gpx file:
@@ -50,7 +50,7 @@
     </form>
   </span>
   <br clear="right"/>
-  <span class="widget">
+  <span class="widget" title="Record">
     <span id="garminNoPlugin">
       Download and install the <a href="http://www.garmin.com/products/communicator/">Garmin Communicator Plugin</a> to upload tracks from your Garmin device.
     </span>
@@ -74,7 +74,7 @@
     </span>
   </span>
   <br clear="right"/>
-  <span class="widget">
+  <span class="widget" title="105">
     <span id="tracksNoTracks">You have no uploaded tracks.</span>
     <span id="tracks" style="display:none;">
       <table style="width:100%;" cellspacing="0">
@@ -84,7 +84,20 @@
     </span>
   </span>
   <br clear="right"/>
-  <span class="widget">
+  <span class="widget" title="105">
+    <span id="coursesNoCourses">You have no courses.</span>
+    <span id="courses" style="display:none;">
+      <table style="width:100%;" cellspacing="0">
+        <tbody><tr><td colspan="2">Your courses:</td></tr></tbody>
+        <tbody id="courseList" class="chooseList"></tbody>
+      </table>
+    </span>
+    <br/>
+    <input id="courseAddCourse" type="button" value="Add course" disabled="true"/>
+    <img id="courseBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
+  </span>
+  <br clear="right"/>
+  <span class="widget" title="Rival">
     <span id="rivalsNoRivals">You have no rivals.</span>
     <span id="rivals" style="display:none;">
       <table style="width:100%;" cellspacing="0">
@@ -100,7 +113,7 @@
 
 <div id="map" style="display:none;"></div>
 
-<table id="chooseRival" style="display:none;" cellspacing="0">
+<table id="chooseRival" style="display:none;" cellspacing="0" title="Rival">
   <tbody id="chooseRivalList" class="chooseList"></tbody>
   <tbody>
     <tr>
@@ -108,14 +121,12 @@
         <span id="chooseRivalPrevDisabled">&lt;-prev</span>
         <a id="chooseRivalPrev" href="javascript:;">&lt;-prev</a>
       </td>
+      <td align="center">
+        <a id="chooseRivalCancel" href="javascript:;">cancel</a>
+      </td>
       <td align="right">
         <span id="chooseRivalNextDisabled">next-&gt;</span>
         <a id="chooseRivalNext" href="javascript:;">next-&gt;</a>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" align="center">
-        <a id="chooseRivalCancel" href="javascript:;">cancel</a>
       </td>
     </tr>
   </tbody>

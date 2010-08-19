@@ -72,7 +72,7 @@ var rideapp = (function($) {
     function initUploadFile() {
         $("#uploadFile").change(function() {
             $("#iframe-hidden").queue("refreshSessionId", function(next) {
-                $("#upload").attr("action",getURI("/upload"));
+                $("#uploadForm").attr("action",getURI("/upload"));
                 $("#uploadSubmit").show();
                 next();
             });
@@ -200,6 +200,7 @@ var rideapp = (function($) {
             var td = document.createElement("td");
             $(tr).append(td);
             if (tracks[info.tracks[i]]) {
+                $(td).addClass("chooseItem");
                 $(td).text(formatTimestamp(tracks[info.tracks[i]].pts[0].t));
                 $(td).click((function(track) {
                     return function() {
@@ -217,7 +218,7 @@ var rideapp = (function($) {
             }
             td = document.createElement("td");
             $(tr).append(td);
-            $(td).addClass("chooseItem");
+            $(td).addClass("chooseItemRight");
             var span = document.createElement("span");
             $(td).append(span);
             $(span).text("delete");
@@ -260,7 +261,6 @@ var rideapp = (function($) {
                     };
                     setTracks();
                     if (!info.home && map.getZoom() == 3) {
-                        info.home = trackData[0];
                         map.setCenter(pts[0]);
                         map.setZoom(12);
                     }
@@ -283,10 +283,12 @@ var rideapp = (function($) {
                 $("#rivalList").append(tr);
                 var td = document.createElement("td");
                 $(tr).append(td);
+                $(td).addClass("chooseItem");
                 $(td).text(info.rivals[i].name);
+                $(td).click(function() { alert("under construction"); });
                 td = document.createElement("td");
                 $(tr).append(td);
-                $(td).addClass("chooseItem");
+                $(td).addClass("chooseItemRight");
                 var span = document.createElement("span");
                 $(td).append(span);
                 $(span).text("remove");
@@ -338,21 +340,22 @@ var rideapp = (function($) {
         var batchSize = 5;
         $("#chooseRival").show();
         $("#chooseRivalList").empty();
-        for (var i = 0; i < batchSize && i + index < info.friends.length; i++) {
-            if (isRival(info.friends[index + i].id))
+        var i;
+        var count = 0;
+        for (var i = index; i < info.friends.length; i++) {
+            if (isRival(info.friends[i].id))
                 continue;
+            if (count >= batchSize)
+                break;
+            count++;
             var tr = document.createElement("tr");
             $("#chooseRivalList").append(tr);
             var td = document.createElement("td");
             $(tr).append(td);
-            $(td).text(info.friends[index + i].name);
-            td = document.createElement("td");
-            $(tr).append(td);
+            $(td).attr("colspan","3");
             $(td).addClass("chooseItem");
-            var span = document.createElement("span");
-            $(td).append(span);
-            $(span).text("add as rival");
-            $(span).click((function(id) {
+            $(td).text(info.friends[i].name);
+            $(td).click((function(id) {
                 return function() {
                     $("#chooseRival").hide();
                     ajax("POST", "/rest/rival/"+id, function(rivals) {
@@ -360,7 +363,7 @@ var rideapp = (function($) {
                         setRivals();
                     }, setRivals);
                 };
-            })(info.friends[index + i].id));
+            })(info.friends[i].id));
         }
         if (index == 0) {
             $("#chooseRivalPrevDisabled").show();
@@ -372,15 +375,17 @@ var rideapp = (function($) {
                 chooseRival(Math.max(0, index - batchSize));
             });
         }
-        if (index + batchSize >= info.friends.length) {
+        if (i >= info.friends.length) {
             $("#chooseRivalNextDisabled").show();
             $("#chooseRivalNext").hide();
         } else {
             $("#chooseRivalNextDisabled").hide();
             $("#chooseRivalNext").show();
-            $("#chooseRivalNext").click(function() {
-                chooseRival(index + batchSize);
-            });
+            $("#chooseRivalNext").click((function(nextIndex) {
+                return function() {
+                    chooseRival(nextIndex);
+                };
+            })(i));
         }
         $("#chooseRivalCancel").click(function() {
             $("#chooseRival").hide();

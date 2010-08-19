@@ -15,16 +15,21 @@
 }
 
 .chooseItem {
+    text-align: left;
+    cursor: pointer;
+}
+
+.chooseItemRight {
     text-align: right;
     color: #888;
 }
 
-.chooseItem span {
+.chooseItemRight span {
     visibility: hidden;
     cursor: pointer;
 }
 
-.chooseItem:hover span {
+.chooseItemRight:hover span {
     visibility: visible;
 }
 
