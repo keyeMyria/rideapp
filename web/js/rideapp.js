@@ -336,7 +336,7 @@ var rideapp = (function($) {
                 $(td).addClass("chooseItemRight");
                 var span = document.createElement("span");
                 $(td).append(span);
-                $(span).text("remove");
+                $(span).text("delete");
                 $(span).click((function(index) {
                     return function() {
                         $("#rivalAddRival").hide();
@@ -447,7 +447,7 @@ var rideapp = (function($) {
                 $(td).addClass("chooseItemRight");
                 var span = document.createElement("span");
                 $(td).append(span);
-                $(span).text("remove");
+                $(span).text("delete");
                 $(span).click((function(index) {
                     return function() {
                         $("#courseAddCourse").hide();
