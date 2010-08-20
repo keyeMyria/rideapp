@@ -3,6 +3,7 @@ aws.accessKey=
 aws.secretKey=
 aws.s3.bucketName=
 aws.s3.prefix=
+aws.ec2.memcachedSecurityGroup=
 
 # Facebook
 facebook.clientID=
@@ -12,4 +13,5 @@ facebook.canvasURL=
 # Garmin Connect
 garmin.garminUnlock=
 
-# Google Maps
+# Fixed memcached pool (comma separated list of hostnames)
+memcached.pool=

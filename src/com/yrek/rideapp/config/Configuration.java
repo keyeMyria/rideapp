@@ -2,6 +2,7 @@ package com.yrek.rideapp.config;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -39,6 +40,7 @@ import com.yrek.rideapp.servlet.PingServlet;
 import com.yrek.rideapp.servlet.PublicJSPServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
+import com.yrek.rideapp.storage.MemcachedStorage;
 import com.yrek.rideapp.storage.Storage;
 import com.yrek.rideapp.storage.S3Storage;
 
@@ -64,7 +66,7 @@ public class Configuration extends GuiceServletContextListener {
             protected void configureServlets() {
                 bind(OAuth2Client.class).to(FacebookOAuth2Client.class);
                 bind(OAuth2Session.class).to(FacebookOAuth2Session.class);
-                bind(Storage.class).to(S3Storage.class);
+                bind(Storage.class).to(MemcachedStorage.class);
                 bind(RESTAPI.class);
 
                 serve("/oauth2").with(OAuth2Servlet.class);
@@ -123,6 +125,16 @@ public class Configuration extends GuiceServletContextListener {
             @Provides @Singleton
             S3Storage provideS3Storage(AmazonS3 amazonS3) {
                 return new S3Storage(amazonS3, properties.getProperty("aws.s3.bucketName"), properties.getProperty("aws.s3.prefix"));
+            }
+
+            @Provides @Singleton
+            MemcachedStorage provideMemcachedStorage(S3Storage s3Storage) throws IOException {
+                ArrayList<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
+                for (String host : properties.getProperty("memcached.pool").split(","))
+                    addresses.add(new InetSocketAddress(host, 11211));
+                MemcachedStorage memcachedStorage = new MemcachedStorage(s3Storage, "~", 864000, addresses);
+                closeables.add(0, memcachedStorage);
+                return memcachedStorage;
             }
         });
     }
