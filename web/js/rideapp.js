@@ -289,7 +289,7 @@ var rideapp = (function($) {
                 var td = document.createElement("td");
                 $(tr).append(td);
                 $(td).addClass("chooseItem");
-                $(td).text(info.rivals[i].name);
+                $(td).text(info.rivals[i].user.name);
                 $(td).click(function() { alert("under construction"); });
                 td = document.createElement("td");
                 $(tr).append(td);
@@ -301,7 +301,7 @@ var rideapp = (function($) {
                     return function() {
                         $("#rivalAddRival").hide();
                         $("#rivalBusy").show();
-                        ajax("DELETE", "/rest/rival/"+info.rivals[index].id, function() {
+                        ajax("DELETE", "/rest/rival/"+info.rivals[index].user.id, function() {
                             info.rivals.splice(index,1);
                             setRivals();
                         }, function() {
@@ -335,7 +335,7 @@ var rideapp = (function($) {
     function chooseRival(index) {
         function isRival(id) {
             for (var i = 0; i < info.rivals.length; i++)
-                if (info.rivals[i].id == id)
+                if (info.rivals[i].user.id == id)
                     return true;
             return false;
         }

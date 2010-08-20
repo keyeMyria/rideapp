@@ -58,10 +58,16 @@ public class RESTAPI {
         @XmlElement public int maxTracks;
         @XmlElement public int maxCourses;
         @XmlElement public int maxRivals;
-        @XmlElement public ArrayList<User> rivals;
+        @XmlElement public ArrayList<Rival> rivals;
         @XmlElement public String[] tracks;
         @XmlElement public ArrayList<Course> courses;
         @XmlElement public Point home;
+    }
+
+    public static class Rival {
+        @XmlElement public User user;
+        @XmlElement public String[] tracks;
+        @XmlElement public ArrayList<Course> courses;
     }
 
     @GET @Path("/info")
@@ -118,15 +124,19 @@ public class RESTAPI {
 
     @GET @Path("/rivals")
     @Produces(MediaType.APPLICATION_JSON)
-    public ArrayList<User> rivals(@Context HttpServletRequest request) {
+    public ArrayList<Rival> rivals(@Context HttpServletRequest request) throws IOException {
         User user = user(request);
         User[] friends = friends(request);
         String[] rivals = db.getRivals(user.getId());
-        ArrayList<User> result = new ArrayList<User>();
+        ArrayList<Rival> result = new ArrayList<Rival>();
         for (String id : rivals)
             for (User friend : friends)
                 if (id.equals(friend.getId())) {
-                    result.add(friend);
+                    Rival rival = new Rival();
+                    rival.user = friend;
+                    rival.tracks = tracks(id);
+                    rival.courses = courses(id);
+                    result.add(rival);
                     break;
                 }
         return result;
@@ -134,7 +144,7 @@ public class RESTAPI {
 
     @POST @Path("/rival/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ArrayList<User> addRival(@Context HttpServletRequest request, @PathParam("id") String id) throws IOException {
+    public ArrayList<Rival> addRival(@Context HttpServletRequest request, @PathParam("id") String id) throws IOException {
         User user = user(request);
         User[] friends = friends(request);
         for (User friend : friends)
@@ -150,16 +160,24 @@ public class RESTAPI {
         db.removeRival(user(request).getId(), id);
     }
 
+    private String[] tracks(String userId) {
+        return db.listTracks(userId);
+    }
+
     @GET @Path("/tracks")
     @Produces(MediaType.APPLICATION_JSON)
     public String[] tracks(@Context HttpServletRequest request) {
-        return db.listTracks(user(request).getId());
+        return tracks(user(request).getId());
+    }
+
+    private byte[] track(String userId, String trackId) {
+        return db.getTrack(userId, trackId);
     }
 
     @GET @Path("/track/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public byte[] track(@Context HttpServletRequest request, @PathParam("id") String id) {
-        return db.getTrack(user(request).getId(), id);
+        return track(user(request).getId(), id);
     }
 
     @DELETE @Path("/track/{id}")
@@ -167,10 +185,7 @@ public class RESTAPI {
         db.deleteTrack(user(request).getId(), id);
     }
 
-    @GET @Path("/courses")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ArrayList<Course> courses(@Context HttpServletRequest request) throws IOException {
-        String userId = user(request).getId();
+    private ArrayList<Course> courses(String userId) throws IOException {
         ArrayList<Course> courses = new ArrayList<Course>();
         for (String id : db.listCourses(userId)) {
             byte[] bytes = db.getCourse(userId, id);
@@ -181,10 +196,20 @@ public class RESTAPI {
         return courses;
     }
 
+    @GET @Path("/courses")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ArrayList<Course> courses(@Context HttpServletRequest request) throws IOException {
+        return courses(user(request).getId());
+    }
+
+    private byte[] course(String userId, String courseId) {
+        return db.getCourse(userId, courseId);
+    }
+
     @GET @Path("/course/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public byte[] course(@Context HttpServletRequest request, @PathParam("id") String id) {
-        return db.getCourse(user(request).getId(), id);
+        return course(user(request).getId(), id);
     }
 
     @POST @Path("/course")
