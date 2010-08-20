@@ -212,11 +212,7 @@ public class RESTAPI {
         return course(user(request).getId(), id);
     }
 
-    @POST @Path("/course")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Course addCourse(@Context HttpServletRequest request, Course course) throws IOException {
-        String userId = user(request).getId();
+    private Course addCourse(String userId, Course course) throws IOException {
         int maxCoursePoints = db.getMaxCoursePoints(userId);
         if (course.points.length > maxCoursePoints) {
             Point[] points = new Point[maxCoursePoints];
@@ -226,6 +222,22 @@ public class RESTAPI {
         course.id = null;
         course.id = db.addCourse(userId, objectMapper.writeValueAsBytes(course));
         return course;
+    }
+
+    @POST @Path("/course")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Course addCourse(@Context HttpServletRequest request, Course course) throws IOException {
+        return addCourse(user(request).getId(), course);
+    }
+
+    @POST @Path("/course/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Course addCourse(@Context HttpServletRequest request, @PathParam("id") String id, Course course) throws IOException {
+        String userId = user(request).getId();
+        db.deleteCourse(userId, id);
+        return addCourse(userId, course);
     }
 
     @DELETE @Path("/course/{id}")

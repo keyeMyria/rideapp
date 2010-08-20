@@ -6,6 +6,7 @@
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
 <script type="text/javascript">jQuery.noConflict()</script>
+<script src="${pageContext.request.contextPath}/js/jquery.json-2.2.min.js" type="text/javascript"></script>
 
 <script type="text/javascript" src="http://developer.garmin.com/web/communicator-api-1.7/prototype/prototype.js"></script>
 <script type="text/javascript" src="http://developer.garmin.com/web/communicator-api-1.7/garmin/util/Util-Broadcaster.js"></script>

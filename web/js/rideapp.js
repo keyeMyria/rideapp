@@ -7,6 +7,8 @@ var rideapp = (function($) {
     var map;
     var tracks = {};
     var makeCourseMap;
+    var makeCourseMarkers;
+    var makeCourseMarkerIcons;
 
     function getURI(path) {
         return contextPath + path + ";jsessionid=" + sessionId;
@@ -56,6 +58,7 @@ var rideapp = (function($) {
     function initInfo(newInfo) {
         info = newInfo;
         setTracks();
+        initRivals();
         setRivals();
         if (map.getZoom() == 3) {
             if (info.home) {
@@ -66,6 +69,7 @@ var rideapp = (function($) {
                 map.setZoom(12);
             }
         }
+        initCourses();
         setCourses();
     }
 
@@ -274,6 +278,42 @@ var rideapp = (function($) {
         }
     }
 
+    var chooseRivalIndex = 0;
+    var chooseRivalPrevIndex = 0;
+    var chooseRivalBatchSize = 10;
+
+    function initRivals() {
+        $("#rivalAddRival").click(function() {
+            $("#rivalAddRival").attr("disabled", "true");
+            chooseRivalIndex = 0;
+            if (info.friends)
+                chooseRival();
+            else
+                getJSON("/rest/friends", function(friends) {
+                    info.friends = friends;
+                    chooseRival();
+                }, function() {
+                    $("#rivalBusy").hide();
+                    $("#rivalAddRival").show();
+                });
+        });
+
+        $("#chooseRivalNext").click(chooseRival);
+        $("#chooseRivalPrev").click(function() {
+            chooseRivalIndex = chooseRivalPrevIndex;
+            chooseRival();
+        });
+        $("#chooseRivalCancel").click(function() {
+            $("#chooseRival").hide();
+            $("#rivalBusy").hide();
+            $("#rivalAddRival").show();
+            if (info.rivals.length < info.maxRivals)
+                $("#rivalAddRival").removeAttr("disabled");
+            else
+                $("#rivalAddRival").attr("disabled", "true");
+        });
+    }
+
     function setRivals() {
         $("#rivalAddRival").show();
         $("#rivalBusy").hide();
@@ -318,21 +358,9 @@ var rideapp = (function($) {
             else
                 $("#rivalAddRival").attr("disabled", "true");
         }
-        $("#rivalAddRival").click(function() {
-            if (info.friends)
-                chooseRival(0);
-            else
-                getJSON("/rest/friends", function(friends) {
-                    info.friends = friends;
-                    chooseRival(0);
-                }, function() {
-                    $("#rivalBusy").hide();
-                    $("#rivalAddRival").show();
-                });
-        });
     }
 
-    function chooseRival(index) {
+    function chooseRival() {
         function isRival(id) {
             for (var i = 0; i < info.rivals.length; i++)
                 if (info.rivals[i].user.id == id)
@@ -340,15 +368,14 @@ var rideapp = (function($) {
             return false;
         }
 
-        var batchSize = 10;
         $("#chooseRival").show();
         $("#chooseRivalList").empty();
         var i;
         var count = 0;
-        for (var i = index; i < info.friends.length; i++) {
+        for (i = chooseRivalIndex; i < info.friends.length; i++) {
             if (isRival(info.friends[i].id))
                 continue;
-            if (count >= batchSize)
+            if (count >= chooseRivalBatchSize)
                 break;
             count++;
             var tr = document.createElement("tr");
@@ -370,15 +397,12 @@ var rideapp = (function($) {
                 };
             })(info.friends[i].id));
         }
-        if (index == 0) {
+        if (chooseRivalIndex == 0) {
             $("#chooseRivalPrevDisabled").show();
             $("#chooseRivalPrev").hide();
         } else {
             $("#chooseRivalPrevDisabled").hide();
             $("#chooseRivalPrev").show();
-            $("#chooseRivalPrev").click(function() {
-                chooseRival(Math.max(0, index - batchSize));
-            });
         }
         if (i >= info.friends.length) {
             $("#chooseRivalNextDisabled").show();
@@ -386,17 +410,13 @@ var rideapp = (function($) {
         } else {
             $("#chooseRivalNextDisabled").hide();
             $("#chooseRivalNext").show();
-            $("#chooseRivalNext").click((function(nextIndex) {
-                return function() {
-                    chooseRival(nextIndex);
-                };
-            })(i));
         }
-        $("#chooseRivalCancel").click(function() {
-            $("#chooseRival").hide();
-            $("#rivalBusy").hide();
-            $("#rivalAddRival").show();
-        });
+        chooseRivalPrevIndex = Math.max(0, chooseRivalIndex - chooseRivalBatchSize);
+        chooseRivalIndex = i;
+    }
+
+    function initCourses() {
+        $("#courseAddCourse").click(function () { showMakeCourse(null); });
     }
 
     function setCourses() {
@@ -408,6 +428,8 @@ var rideapp = (function($) {
             $("#courses").hide();
             $("#courseAddCourse").removeAttr("disabled");
         } else {
+            $("#coursesNoCourses").hide();
+            $("#courses").show();
             for (var i = 0; i < info.courses.length; i++) {
                 var tr = document.createElement("tr");
                 $("#courseList").append(tr);
@@ -415,7 +437,11 @@ var rideapp = (function($) {
                 $(tr).append(td);
                 $(td).addClass("chooseItem");
                 $(td).text(info.courses[i].name);
-                $(td).click(function() { alert("under construction"); });
+                $(td).click((function(course) {
+                    return function() {
+                        showMakeCourse(course);
+                    }
+                })(info.courses[i]));
                 td = document.createElement("td");
                 $(tr).append(td);
                 $(td).addClass("chooseItemRight");
@@ -430,35 +456,167 @@ var rideapp = (function($) {
                             info.courses.splice(index,1);
                             setCourses();
                         }, function() {
-                                $("#courseAddCourse").show();
-                                $("#courseBusy").hide();
+                            $("#courseAddCourse").show();
+                            $("#courseBusy").hide();
                         });
                     };
                 })(i));
             }
-            $("#couseNoCourses").hide();
-            $("#courses").show();
             if (info.courses.length < info.maxCourses)
                 $("#courseAddCourse").removeAttr("disabled");
             else
                 $("#courseAddCourse").attr("disabled", "true");
         }
-        $("#courseAddCourse").click(showMakeCourse);
     }
 
-    function showMakeCourse() {
-        $("#makeCourseName").val("");
-        $("#makeCourseLoop").val(null);
-        //...
-        $("#makeCourseCancel").click(function() {
+    function resetMakeCourseMarkers() {
+        if (!makeCourseMarkers)
+            return;
+        for (var i = 0; i < makeCourseMarkers.length; i++) {
+            makeCourseMarkers[i].setMap(null);
+            makeCourseMarkers[i].setIcon(makeCourseMarkerIcons[i]);
+            makeCourseMarkers[i].setTitle(i == 0 ? "Start" : "Checkpoint #" + (i - -1));
+            makeCourseMarkers[i].index = i;
+        }
+    }
+
+    function deleteMakeCourseMarker(marker) {
+        makeCourseMarkers.splice(marker.index,1);
+        makeCourseMarkers.push(marker);
+        marker.setMap(null);
+        for (var i = marker.index; i < makeCourseMarkers.length; i++) {
+            makeCourseMarkers[i].setIcon(makeCourseMarkerIcons[i]);
+            makeCourseMarkers[i].setTitle(i == 0 ? "Start" : "Checkpoint #" + (i - -1));
+            makeCourseMarkers[i].index = i;
+        }
+    }
+
+    function enableDisableAddCourse() {
+        function disabled() {
+            if (!$("#makeCourseName").val())
+                return true;
+            if (!makeCourseMarkers[0].getMap())
+                return true;
+            if (!makeCourseMarkers[1].getMap())
+                return !$("#makeCourseLoop").attr("checked");
+            return false;
+        }
+        if (disabled())
+            $("#makeCourseAdd").attr("disabled", "true");
+        else
+            $("#makeCourseAdd").removeAttr("disabled");
+    }
+
+    var courseToEdit;
+
+    function showMakeCourse(oldCourse) {
+        courseToEdit = oldCourse;
+        function makeCourseAdd() {
+            var points = [];
+            for (var i = 0; i < makeCourseMarkers.length; i++) {
+                if (!makeCourseMarkers[i].getMap())
+                    break;
+                points.push({
+                    lat:makeCourseMarkers[i].getPosition().lat(),
+                    lon:makeCourseMarkers[i].getPosition().lng()
+                });
+            }
+            points.toJSON = 0; // Hack because Prototype framework required by Garmin screws up JSON.stringify by adding Array.prototype.toJSON.
+
+            resetMakeCourseMarkers();
             $("#makeCourse").hide();
-        });
+            $("#courseAddCourse").hide();
+            $("#courseBusy").show();
+            ajax("POST", courseToEdit ? "/rest/course/" + courseToEdit.id : "/rest/course", (function(course) {
+                return function(newCourse) {
+                    if (course) {
+                        for (var i = 0; i < info.courses.length; i++)
+                            if (course.id == info.courses[i].id) {
+                                info.courses.splice(i, 1);
+                                break;
+                            }
+                    }
+                    info.courses.push(newCourse);
+                    setCourses();
+                };
+            })(courseToEdit), function() {
+                $("#courseAddCourse").show();
+                $("#courseBusy").hide();
+            }, $.toJSON({
+                name:$("#makeCourseName").val(),
+                loop:!!$("#makeCourseLoop").attr("checked"),
+                points:points
+            }), "application/json");
+        }
+
+        resetMakeCourseMarkers();
+        $("#makeCourseName").val("");
+        $("#makeCourseLoop").removeAttr("checked");
         $("#makeCourse").show();
         if (!makeCourseMap) {
             makeCourseMap = new google.maps.Map(document.getElementById("makeCourseMap"), { mapTypeId:google.maps.MapTypeId.ROADMAP, zoom:3, center:new google.maps.LatLng(39,-98) });
+            makeCourseMarkers = [];
+            makeCourseMarkerIcons = [];
+            for (var i = 0; i < Math.min(12, info.maxCoursePoints); i++) {
+                var icon = new google.maps.MarkerImage(contextPath+"/img/"+(i- -1)+".gif", new google.maps.Size(24,24), new google.maps.Point(0,0), new google.maps.Point(12,12));
+                makeCourseMarkerIcons.push(icon);
+                var marker = new google.maps.Marker({
+                    draggable:true,
+                    flat:true,
+                    icon:icon
+                });
+                marker.index = i;
+                makeCourseMarkers.push(marker);
+                google.maps.event.addListener(marker, "dblclick", (function(marker) {
+                    return function(event) {
+                        deleteMakeCourseMarker(marker);
+                        enableDisableAddCourse();
+                        return false;
+                    };
+                })(marker));
+            }
+            google.maps.event.addListener(makeCourseMap, "click", function(event) {
+                for (var i = 0; i < makeCourseMarkers.length; i++) {
+                    if (makeCourseMarkers[i].getMap())
+                        continue;
+                    makeCourseMarkers[i].setPosition(event.latLng);
+                    makeCourseMarkers[i].setMap(makeCourseMap);
+                    enableDisableAddCourse();
+                    break;
+                }
+            });
+            $("#makeCourseName").change(enableDisableAddCourse);
+            $("#makeCourseLoop").change(enableDisableAddCourse);
+            $("#makeCourseCancel").click(function() {
+                resetMakeCourseMarkers();
+                $("#makeCourse").hide();
+            });
+            $("#makeCourseAdd").click(function() { makeCourseAdd(); });
         }
-        makeCourseMap.setCenter(map.getCenter());
-        makeCourseMap.setZoom(14);
+        if (oldCourse) {
+            $("#makeCourseName").val(oldCourse.name);
+            if (oldCourse.loop)
+                $("#makeCourseLoop").attr("checked", "true");
+            else
+                $("#makeCourseLoop").removeAttr("checked");
+            var minLat = oldCourse.points[0].lat;
+            var maxLat = oldCourse.points[0].lat;
+            var minLon = oldCourse.points[0].lon;
+            var maxLon = oldCourse.points[0].lon;
+            for (var i = 0; i < Math.min(makeCourseMarkers.length, oldCourse.points.length); i++) {
+                minLat = Math.min(minLat, oldCourse.points[i].lat);
+                maxLat = Math.max(maxLat, oldCourse.points[i].lat);
+                minLon = Math.min(minLon, oldCourse.points[i].lon);
+                maxLon = Math.max(maxLon, oldCourse.points[i].lon);
+                makeCourseMarkers[i].setPosition(new google.maps.LatLng(oldCourse.points[i].lat, oldCourse.points[i].lon));
+                makeCourseMarkers[i].setMap(makeCourseMap);
+            }
+            makeCourseMap.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
+            enableDisableAddCourse();
+        } else {
+            makeCourseMap.setCenter(map.getCenter());
+            makeCourseMap.setZoom(14);
+        }
     }
 
     function refreshSessionId(newSessionId) {
