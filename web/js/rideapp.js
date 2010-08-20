@@ -522,6 +522,9 @@ var rideapp = (function($) {
                 });
             }
             points.toJSON = 0; // Hack because Prototype framework required by Garmin screws up JSON.stringify by adding Array.prototype.toJSON.
+            var name = $("#makeCourseName").val();
+            if (name.length > info.maxNameLength)
+                name = name.substring(0, info.maxNameLength);
 
             resetMakeCourseMarkers();
             $("#makeCourse").hide();
@@ -543,7 +546,7 @@ var rideapp = (function($) {
                 $("#courseAddCourse").show();
                 $("#courseBusy").hide();
             }, $.toJSON({
-                name:$("#makeCourseName").val(),
+                name:name,
                 loop:!!$("#makeCourseLoop").attr("checked"),
                 points:points
             }), "application/json");

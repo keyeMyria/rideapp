@@ -50,6 +50,10 @@ public class DB {
         return 5;
     }
 
+    public int getMaxNameLength(String userId) {
+        return 50;
+    }
+
     private String addFile(String userId, byte[] data, String type, int maxFiles) {
         String[] files = storage.listFiles(userId + type);
         if (files.length >= maxFiles)

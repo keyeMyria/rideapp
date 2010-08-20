@@ -58,6 +58,7 @@ public class RESTAPI {
         @XmlElement public int maxTracks;
         @XmlElement public int maxCourses;
         @XmlElement public int maxRivals;
+        @XmlElement public int maxNameLength;
         @XmlElement public ArrayList<Rival> rivals;
         @XmlElement public String[] tracks;
         @XmlElement public ArrayList<Course> courses;
@@ -103,6 +104,7 @@ public class RESTAPI {
         result.maxTracks = db.getMaxTracks(user.getId());
         result.maxCourses = db.getMaxCourses(user.getId());
         result.maxRivals = db.getMaxRivals(user.getId());
+        result.maxNameLength = db.getMaxNameLength(user.getId());
         return result;
     }
 
@@ -213,6 +215,9 @@ public class RESTAPI {
     }
 
     private Course addCourse(String userId, Course course) throws IOException {
+        int maxNameLength = db.getMaxNameLength(userId);
+        if (course.name != null && course.name.length() > maxNameLength)
+            course.name = course.name.substring(0, maxNameLength);
         int maxCoursePoints = db.getMaxCoursePoints(userId);
         if (course.points.length > maxCoursePoints) {
             Point[] points = new Point[maxCoursePoints];
