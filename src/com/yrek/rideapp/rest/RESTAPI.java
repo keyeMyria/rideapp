@@ -136,7 +136,7 @@ public class RESTAPI {
                 if (id.equals(friend.getId())) {
                     Rival rival = new Rival();
                     rival.user = friend;
-                    rival.tracks = tracks(id);
+                    rival.tracks = db.listTracks(id);
                     rival.courses = courses(id);
                     result.add(rival);
                     break;
@@ -144,16 +144,19 @@ public class RESTAPI {
         return result;
     }
 
+    private boolean isFriend(HttpServletRequest request, String id) {
+        User[] friends = friends(request);
+        for (User friend : friends)
+            if (id.equals(friend.getId()))
+                return true;
+        return false;
+    }
+
     @POST @Path("/rival/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ArrayList<Rival> addRival(@Context HttpServletRequest request, @PathParam("id") String id) throws IOException {
-        User user = user(request);
-        User[] friends = friends(request);
-        for (User friend : friends)
-            if (id.equals(friend.getId())) {
-                db.addRival(user.getId(), id);
-                break;
-            }
+        if (isFriend(request, id))
+            db.addRival(user(request).getId(), id);
         return rivals(request);
     }
 
@@ -162,24 +165,24 @@ public class RESTAPI {
         db.removeRival(user(request).getId(), id);
     }
 
-    private String[] tracks(String userId) {
-        return db.listTracks(userId);
+    @GET @Path("/rival/{id}/track/{trackId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public byte[] getRivalTrack(@Context HttpServletRequest request, @PathParam("id") String id, @PathParam("trackId") String trackId) throws IOException {
+        if (!isFriend(request, id))
+            return null;
+        return db.getTrack(id, trackId);
     }
 
     @GET @Path("/tracks")
     @Produces(MediaType.APPLICATION_JSON)
     public String[] tracks(@Context HttpServletRequest request) {
-        return tracks(user(request).getId());
-    }
-
-    private byte[] track(String userId, String trackId) {
-        return db.getTrack(userId, trackId);
+        return db.listTracks(user(request).getId());
     }
 
     @GET @Path("/track/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public byte[] track(@Context HttpServletRequest request, @PathParam("id") String id) {
-        return track(user(request).getId(), id);
+        return db.getTrack(user(request).getId(), id);
     }
 
     @DELETE @Path("/track/{id}")
@@ -204,14 +207,10 @@ public class RESTAPI {
         return courses(user(request).getId());
     }
 
-    private byte[] course(String userId, String courseId) {
-        return db.getCourse(userId, courseId);
-    }
-
     @GET @Path("/course/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public byte[] course(@Context HttpServletRequest request, @PathParam("id") String id) {
-        return course(user(request).getId(), id);
+        return db.getCourse(user(request).getId(), id);
     }
 
     private Course addCourse(String userId, Course course) throws IOException {

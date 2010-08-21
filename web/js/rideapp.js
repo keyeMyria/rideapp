@@ -80,7 +80,8 @@ try {
             markerIcons.push(icon);
             var marker = new google.maps.Marker({
                 flat:true,
-                icon:icon
+                icon:icon,
+                title:(i == 0 ? "Start" : "Checkpoint #" + (i - -1))
             });
             markers.push(marker);
         }
@@ -90,11 +91,12 @@ try {
             strokeWeight:3
         });
 
-        setTracks();
         initRivals();
         setRivals();
         initCourses();
         setCourses();
+        setTracks();
+        setMainContent();
     }
 
     function setOverlays(course, pts, startIndex, endIndex) {
@@ -175,15 +177,19 @@ try {
         getJSON("/rest/tracks", function(tracks) {
             info.tracks = tracks;
             setTracks();
+            setMainContent();
         });
     }
 
     var garminControl;
 
     function initGarmin() {
-        garminControl = new Garmin.DeviceControl();
-        if (!garminControl.isPluginInitialized())
-            return;
+        try {
+            garminControl = new Garmin.DeviceControl();
+            if (!garminControl.isPluginInitialized())
+                return;
+        } catch (e) {
+        }
         garminControl.register({
             onFinishFindDevices:garminFindDevice,
             onProgressReadFromDevice:garminReadProgress,
@@ -238,6 +244,7 @@ try {
             getJSON("/rest/tracks", function(tracks) {
                 info.tracks = tracks;
                 setTracks();
+                setMainContent();
             });
         }, function(xhr, status) {
             garminStatus("Upload failed: " + xhr.statusText);
@@ -268,7 +275,8 @@ try {
             if (tracks[info.tracks[i]]) {
                 $(td).addClass("chooseItem");
                 var date = rideapp.parseTimestamp(tracks[info.tracks[i]].pts[0].t);
-                $(td).text(rideapp.formatDate(date) + " " + rideapp.formatTime(date));
+                $(td).text(rideapp.formatDate(date));
+                $(td).attr("title", rideapp.formatTime(date));
                 $(td).click((function(track) {
                     return function() {
                         setOverlays(null, track.pts, 0, track.pts.length);
@@ -292,36 +300,60 @@ try {
                         tracks[info.tracks[index]] = null;
                         info.tracks.splice(index,1);
                         setTracks();
+                        setMainContent();
                     });
                 };
             })(i));
         }
-        fetchTracks();
     }
 
     function fetchTracks() {
         var trackToFetch = null;
-        var fetchUri = null;
+        var fetchUri;
+        var yourTracksDone = true;
         for (var i = 0; i < info.tracks.length; i++) {
-            if (!tracks[info.tracks[i]]) {
-                trackToFetch = info.tracks[i];
-                fetchUri = "/rest/track/" + trackToFetch;
+            var id = info.tracks[i];
+            if (!tracks[id]) {
+                trackToFetch = id;
+                fetchUri = "/rest/track/" + id;
+                yourTracksDone = false;
                 break;
+            }
+        }
+        if (yourTracksDone) {
+            for (var i = 0; i < info.rivals.length; i++) {
+                for (var j = 0; j < info.rivals[i].tracks.length; j++) {
+                    var id = info.rivals[i].id + "/track/" + info.rivals[i].tracks[j];
+                    if (!tracks[id]) {
+                        trackToFetch = id;
+                        fetchUri = "/rest/rival/" + id;
+                        break;
+                    }
+                }
+                if (trackToFetch)
+                    break;
             }
         }
         if (!trackToFetch)
             return;
 
-        getJSON(fetchUri, (function(id) {
+        getJSON(fetchUri, (function(id, yourTracksDone) {
             return function(trackData) {
                 tracks[id] = { pts:trackData };
-                setTracks();
+                if (!yourTracksDone)
+                    setTracks();
+                setMainContent();
                 if (!info.home && map.getZoom() == 3) {
                     map.setCenter(new google.maps.LatLng(pts[0].lat, pts[0].lon));
                     map.setZoom(12);
                 }
             };
-        })(trackToFetch));
+        })(trackToFetch, yourTracksDone));
+    }
+
+    function setMainContent() {
+        //...
+        fetchTracks();
     }
 
     var chooseRivalIndex = 0;
@@ -520,7 +552,7 @@ try {
             return;
         for (var i = 0; i < makeCourseMarkers.length; i++) {
             makeCourseMarkers[i].setMap(null);
-            makeCourseMarkers[i].setIcon(makeCourseMarkerIcons[i]);
+            makeCourseMarkers[i].setIcon(markerIcons[i]);
             makeCourseMarkers[i].setTitle(i == 0 ? "Start" : "Checkpoint #" + (i - -1));
             makeCourseMarkers[i].index = i;
         }
@@ -531,7 +563,7 @@ try {
         makeCourseMarkers.push(marker);
         marker.setMap(null);
         for (var i = marker.index; i < makeCourseMarkers.length; i++) {
-            makeCourseMarkers[i].setIcon(makeCourseMarkerIcons[i]);
+            makeCourseMarkers[i].setIcon(markerIcons[i]);
             makeCourseMarkers[i].setTitle(i == 0 ? "Start" : "Checkpoint #" + (i - -1));
             makeCourseMarkers[i].index = i;
         }
