@@ -1,6 +1,7 @@
 package com.yrek.rideapp.config;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import com.yrek.rideapp.servlet.PingServlet;
 import com.yrek.rideapp.servlet.PublicJSPServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
+import com.yrek.rideapp.storage.FileStorage;
 import com.yrek.rideapp.storage.MemcachedStorage;
 import com.yrek.rideapp.storage.Storage;
 import com.yrek.rideapp.storage.S3Storage;
@@ -131,10 +133,15 @@ public class Configuration extends GuiceServletContextListener {
             MemcachedStorage provideMemcachedStorage(S3Storage s3Storage) throws IOException {
                 ArrayList<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
                 for (String host : properties.getProperty("memcached.pool").split(","))
-                    addresses.add(new InetSocketAddress(host, 11211));
+                    addresses.add(new InetSocketAddress(host, Integer.parseInt(properties.getProperty("memcached.port"))));
                 MemcachedStorage memcachedStorage = new MemcachedStorage(s3Storage, "~", 864000, addresses);
                 closeables.add(0, memcachedStorage);
                 return memcachedStorage;
+            }
+
+            @Provides @Singleton
+            FileStorage provideFileStorage() {
+                return new FileStorage(new File(properties.getProperty("storage.dir")));
             }
         });
     }

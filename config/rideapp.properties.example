@@ -15,3 +15,7 @@ garmin.garminUnlock=
 
 # Fixed memcached pool (comma separated list of hostnames)
 memcached.pool=
+memcached.port=11211
+
+# Filesystem storage
+storage.dir=/tmp/rideapp
