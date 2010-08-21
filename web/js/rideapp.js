@@ -1,4 +1,9 @@
-var rideapp = (function($) {
+try {
+    rideapp = rideapp;
+} catch (e) {
+    rideapp = {};
+}
+(function($) {
     var contextPath;
     var sessionId;
     var garminUnlock;
@@ -6,9 +11,11 @@ var rideapp = (function($) {
     var info;
     var map;
     var tracks = {};
+    var markers;
+    var markerIcons;
+    var polyline;
     var makeCourseMap;
     var makeCourseMarkers;
-    var makeCourseMarkerIcons;
 
     function getURI(path) {
         return contextPath + path + ";jsessionid=" + sessionId;
@@ -57,9 +64,6 @@ var rideapp = (function($) {
 
     function initInfo(newInfo) {
         info = newInfo;
-        setTracks();
-        initRivals();
-        setRivals();
         if (map.getZoom() == 3) {
             if (info.home) {
                 map.setCenter(new google.maps.LatLng(info.home.lat, info.home.lon));
@@ -69,8 +73,62 @@ var rideapp = (function($) {
                 map.setZoom(12);
             }
         }
+        markerIcons = [];
+        markers = [];
+        for (var i = 0; i < Math.min(12, info.maxCoursePoints); i++) {
+            var icon = new google.maps.MarkerImage(contextPath+"/img/"+(i- -1)+".gif", new google.maps.Size(24,24), new google.maps.Point(0,0), new google.maps.Point(12,12));
+            markerIcons.push(icon);
+            var marker = new google.maps.Marker({
+                flat:true,
+                icon:icon
+            });
+            markers.push(marker);
+        }
+        polyline = new google.maps.Polyline({
+            strokeColor:"#FF00FF",
+            strokeOpacity:0.9,
+            strokeWeight:3
+        });
+
+        setTracks();
+        initRivals();
+        setRivals();
         initCourses();
         setCourses();
+    }
+
+    function setOverlays(course, pts, startIndex, endIndex) {
+        for (var i = 0; i < markers.length; i++) {
+            if (course && i < course.points.length) {
+                markers[i].setMap(map);
+                markers[i].setPosition(new google.maps.LatLng(course.points[i].lat, course.points[i].lon));
+            } else {
+                markers[i].setMap(null);
+            }
+        }
+        if (!pts) {
+            polyline.setMap(null);
+        } else {
+            var path = [];
+            for (var i = startIndex; i < endIndex; i++)
+                path.push(new google.maps.LatLng(pts[i].lat, pts[i].lon));
+            polyline.setPath(path);
+            polyline.setMap(map);
+        }
+    }
+
+    function fitMap(pts, startIndex, endIndex) {
+        var minLat = pts[startIndex].lat;
+        var maxLat = pts[startIndex].lat;
+        var minLon = pts[startIndex].lon;
+        var maxLon = pts[startIndex].lon;
+        for (var i = startIndex; i < endIndex; i++) {
+            minLat = Math.min(minLat, pts[i].lat);
+            maxLat = Math.max(maxLat, pts[i].lat);
+            minLon = Math.min(minLon, pts[i].lon);
+            maxLon = Math.max(maxLon, pts[i].lon);
+        }
+        map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
     }
 
     function removeMapOverlays() {
@@ -202,7 +260,6 @@ var rideapp = (function($) {
         $("#tracksNoTracks").hide();
         $("#tracks").show();
         $("#trackList").empty();
-        var trackToFetch = null;
         for (var i = 0; i < info.tracks.length; i++) {
             var tr = document.createElement("tr");
             $("#trackList").append(tr);
@@ -210,20 +267,18 @@ var rideapp = (function($) {
             $(tr).append(td);
             if (tracks[info.tracks[i]]) {
                 $(td).addClass("chooseItem");
-                $(td).text(formatTimestamp(tracks[info.tracks[i]].pts[0].t));
+                var date = rideapp.parseTimestamp(tracks[info.tracks[i]].pts[0].t);
+                $(td).text(rideapp.formatDate(date) + " " + rideapp.formatTime(date));
                 $(td).click((function(track) {
                     return function() {
-                        removeMapOverlays();
-                        track.overlay.setMap(map);
-                        map.fitBounds(track.bounds);
+                        setOverlays(null, track.pts, 0, track.pts.length);
+                        fitMap(track.pts, 0, track.pts.length);
                     };
                 })(tracks[info.tracks[i]]));
             } else {
                 var img = document.createElement("img");
                 $(td).append(img);
                 $(img).attr("src",contextPath+"/img/working.gif");
-                if (!trackToFetch)
-                    trackToFetch = info.tracks[i];
             }
             td = document.createElement("td");
             $(tr).append(td);
@@ -234,7 +289,6 @@ var rideapp = (function($) {
             $(span).click((function(index) {
                 return function() {
                     ajax("DELETE", "/rest/track/"+info.tracks[index], function() {
-                        tracks[info.tracks[index]].overlay.setMap(null);
                         tracks[info.tracks[index]] = null;
                         info.tracks.splice(index,1);
                         setTracks();
@@ -242,40 +296,32 @@ var rideapp = (function($) {
                 };
             })(i));
         }
-        if (trackToFetch) {
-            getJSON("/rest/track/" + trackToFetch, (function(id) {
-                return function(trackData) {
-                    var pts = [];
-                    var minLat, maxLat, minLon, maxLon;
-                    minLat = trackData[0].lat;
-                    maxLat = trackData[0].lat;
-                    minLon = trackData[0].lon;
-                    maxLon = trackData[0].lon;
-                    for (var i = 0; i < trackData.length; i++) {
-                        pts.push(new google.maps.LatLng(trackData[i].lat, trackData[i].lon));
-                        minLat = Math.min(minLat, trackData[i].lat);
-                        maxLat = Math.max(maxLat, trackData[i].lat);
-                        minLon = Math.min(minLon, trackData[i].lon);
-                        maxLon = Math.max(maxLon, trackData[i].lon);
-                    }
-                    tracks[id] = {
-                        pts:trackData,
-                        bounds:new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)),
-                        overlay:new google.maps.Polyline({
-                            path:pts,
-                            strokeColor:"#FF00FF",
-                            strokeOpacity:0.9,
-                            strokeWeight:3
-                        })
-                    };
-                    setTracks();
-                    if (!info.home && map.getZoom() == 3) {
-                        map.setCenter(pts[0]);
-                        map.setZoom(12);
-                    }
-                };
-            })(trackToFetch));
+        fetchTracks();
+    }
+
+    function fetchTracks() {
+        var trackToFetch = null;
+        var fetchUri = null;
+        for (var i = 0; i < info.tracks.length; i++) {
+            if (!tracks[info.tracks[i]]) {
+                trackToFetch = info.tracks[i];
+                fetchUri = "/rest/track/" + trackToFetch;
+                break;
+            }
         }
+        if (!trackToFetch)
+            return;
+
+        getJSON(fetchUri, (function(id) {
+            return function(trackData) {
+                tracks[id] = { pts:trackData };
+                setTracks();
+                if (!info.home && map.getZoom() == 3) {
+                    map.setCenter(new google.maps.LatLng(pts[0].lat, pts[0].lon));
+                    map.setZoom(12);
+                }
+            };
+        })(trackToFetch));
     }
 
     var chooseRivalIndex = 0;
@@ -559,14 +605,11 @@ var rideapp = (function($) {
         if (!makeCourseMap) {
             makeCourseMap = new google.maps.Map(document.getElementById("makeCourseMap"), { mapTypeId:google.maps.MapTypeId.ROADMAP, zoom:3, center:new google.maps.LatLng(39,-98) });
             makeCourseMarkers = [];
-            makeCourseMarkerIcons = [];
             for (var i = 0; i < Math.min(12, info.maxCoursePoints); i++) {
-                var icon = new google.maps.MarkerImage(contextPath+"/img/"+(i- -1)+".gif", new google.maps.Size(24,24), new google.maps.Point(0,0), new google.maps.Point(12,12));
-                makeCourseMarkerIcons.push(icon);
                 var marker = new google.maps.Marker({
                     draggable:true,
                     flat:true,
-                    icon:icon
+                    icon:markerIcons[i]
                 });
                 marker.index = i;
                 makeCourseMarkers.push(marker);
@@ -597,6 +640,7 @@ var rideapp = (function($) {
             $("#makeCourseAdd").click(function() { makeCourseAdd(); });
         }
         if (oldCourse) {
+            $("#makeCourseAdd").val("Save course");
             $("#makeCourseName").val(oldCourse.name);
             if (oldCourse.loop)
                 $("#makeCourseLoop").attr("checked", "true");
@@ -617,6 +661,7 @@ var rideapp = (function($) {
             makeCourseMap.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
             enableDisableAddCourse();
         } else {
+            $("#makeCourseAdd").val("Add course");
             makeCourseMap.setCenter(map.getCenter());
             makeCourseMap.setZoom(14);
         }
@@ -627,9 +672,7 @@ var rideapp = (function($) {
         $("#iframe-hidden").dequeue("refreshSessionId");
     }
 
-    return {
-        setUploadStatus:setUploadStatus,
-        refreshSessionId:refreshSessionId,
-        init:init
-    };
+    rideapp.setUploadStatus = setUploadStatus;
+    rideapp.refreshSessionId = refreshSessionId;
+    rideapp.init = init;
 })(jQuery)

@@ -22,6 +22,7 @@
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
+<script src="${pageContext.request.contextPath}/js/rideapp-util.js" type="text/javascript"></script>
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
 </head>
