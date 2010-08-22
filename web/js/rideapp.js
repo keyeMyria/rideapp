@@ -317,7 +317,7 @@ try {
         }
         if (yourTracksDone) {
             for (var i = 0; i < info.rivals.length; i++) {
-                for (var j = 0; j < info.rivals[i].tracks.length; j++) {
+                for (var j = Math.max(0, info.rivals[i].tracks.length - limits.maxTracks); j < info.rivals[i].tracks.length; j++) {
                     var id = info.rivals[i].id + "/track/" + info.rivals[i].tracks[j];
                     if (!tracks[id]) {
                         trackToFetch = id;

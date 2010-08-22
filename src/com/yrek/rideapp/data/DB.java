@@ -31,7 +31,7 @@ public class DB {
     }
 
     public int getMaxTrackPoints(String userId) {
-        return 1000;
+        return 1500;
     }
 
     public int getMaxCoursePoints(String userId) {
@@ -39,7 +39,7 @@ public class DB {
     }
 
     public int getMaxTracks(String userId) {
-        return 5;
+        return 10;
     }
 
     public int getMaxCourses(String userId) {
