@@ -26,7 +26,7 @@
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
 </head>
-<body id="body" onload="rideapp.init('${pageContext.request.contextPath}','${sessionId}', ${garminUnlock})">
+<body id="body" onload="rideapp.initUserPage('${pageContext.request.contextPath}','${sessionId}', ${garminUnlock})">
 <iframe id="iframe-hidden" style="position:absolute; top:0px; left:0px; width: 0px; height: 0px; border: none;"></iframe>
 
 <span style="float:right">

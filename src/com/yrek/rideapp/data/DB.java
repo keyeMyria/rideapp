@@ -22,7 +22,7 @@ public class DB {
     private static final String TRACKS = "/trk/";
     private static final String COURSES = "/crs/";
     private static final String RIVALS = "/rvl";
-    private static final String HOME = "/h";
+    private static final String USER_INFO = "/u";
 
     private static final SimpleDateFormat timestampFormat;
     static {
@@ -163,11 +163,11 @@ public class DB {
         storage.writeFile(userId + RIVALS, bytes.toByteArray());
     }
 
-    public byte[] getHome(String userId) {
-        return storage.readFile(userId + HOME);
+    public byte[] getUserInfo(String userId) {
+        return storage.readFile(userId + USER_INFO);
     }
 
-    public void setHome(String userId, byte[] home) {
-        storage.writeFile(userId + HOME, home);
+    public void setUserInfo(String userId, byte[] userInfo) {
+        storage.writeFile(userId + USER_INFO, userInfo);
     }
 }

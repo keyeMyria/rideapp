@@ -62,13 +62,19 @@ public class RESTAPI {
         @XmlElement public ArrayList<Rival> rivals;
         @XmlElement public String[] tracks;
         @XmlElement public ArrayList<Course> courses;
-        @XmlElement public Point home;
+        @XmlElement public UserInfo userInfo;
     }
 
     public static class Rival {
         @XmlElement public User user;
+        @XmlElement public UserInfo userInfo;
         @XmlElement public String[] tracks;
         @XmlElement public ArrayList<Course> courses;
+    }
+
+    public static class UserInfo {
+        @XmlElement public User user;
+        @XmlElement public Point home;
     }
 
     @GET @Path("/info")
@@ -78,7 +84,7 @@ public class RESTAPI {
         result.rivals = rivals(request);
         result.tracks = tracks(request);
         result.courses = courses(request);
-        result.home = home(request);
+        result.userInfo = userInfo(request);
         return result;
     }
 
@@ -108,20 +114,38 @@ public class RESTAPI {
         return result;
     }
 
+    private UserInfo userInfo(User user, boolean create) throws IOException {
+        byte[] bytes = db.getUserInfo(user.getId());
+        if (bytes != null)
+            return objectMapper.readValue(bytes, 0, bytes.length, UserInfo.class);
+        if (!create)
+            return null;
+        UserInfo userInfo = new UserInfo();
+        userInfo.user = user;
+        db.setUserInfo(user.getId(), objectMapper.writeValueAsBytes(userInfo));
+        return userInfo;
+    }
+
+    @GET @Path("/userInfo")
+    @Produces(MediaType.APPLICATION_JSON)
+    public UserInfo userInfo(@Context HttpServletRequest request) throws IOException {
+        return userInfo(user(request), true);
+    }
+
     @GET @Path("/home")
     @Produces(MediaType.APPLICATION_JSON)
     public Point home(@Context HttpServletRequest request) throws IOException {
-        User user = user(request);
-        byte[] home = db.getHome(user.getId());
-        if (home == null)
-            return null;
-        return objectMapper.readValue(home, 0, home.length, Point.class);
+        return userInfo(request).home;
     }
 
     @PUT @Path("/home")
     @Consumes(MediaType.APPLICATION_JSON)
     public void home(@Context HttpServletRequest request, Point home) throws IOException {
-        db.setHome(user(request).getId(), objectMapper.writeValueAsBytes(home));
+        User user = user(request);
+        UserInfo userInfo = new UserInfo();
+        userInfo.user = user;
+        userInfo.home = home;
+        db.setUserInfo(user.getId(), objectMapper.writeValueAsBytes(userInfo));
     }
 
     @GET @Path("/rivals")
@@ -136,6 +160,7 @@ public class RESTAPI {
                 if (id.equals(friend.getId())) {
                     Rival rival = new Rival();
                     rival.user = friend;
+                    rival.userInfo = userInfo(friend, false);
                     rival.tracks = db.listTracks(id);
                     rival.courses = courses(id);
                     result.add(rival);

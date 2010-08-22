@@ -50,7 +50,7 @@ try {
         return timestamp;
     }
 
-    function init(initContextPath, initSessionId, initGarminUnlock) {
+    function initUserPage(initContextPath, initSessionId, initGarminUnlock) {
         contextPath = initContextPath;
         sessionId = initSessionId;
         garminUnlock = initGarminUnlock;
@@ -65,8 +65,8 @@ try {
     function initInfo(newInfo) {
         info = newInfo;
         if (map.getZoom() == 3) {
-            if (info.home) {
-                map.setCenter(new google.maps.LatLng(info.home.lat, info.home.lon));
+            if (info.userInfo.home) {
+                map.setCenter(new google.maps.LatLng(info.userInfo.home.lat, info.userInfo.home.lon));
                 map.setZoom(12);
             } else if (info.courses.length > 0) {
                 map.setCenter(new google.maps.LatLng(info.courses[0].points[0].lat, info.courses[0].points[0].lon));
@@ -755,6 +755,15 @@ try {
         enableDisableAddCourse();
     }
 
+    function initPublicPage(userInfo, initInfo) {
+        info = initInfo;
+        $("#publicUser").text(userInfo.user.name);
+        $("#publicUser").attr("href", userInfo.user.link);
+        $("#publicContent").empty();
+        for (var i = 0; i < info.courses.length; i++)
+            formatCourse($("#publicContent"), info.courses[i]);
+    }
+
     function refreshSessionId(newSessionId) {
         sessionId = newSessionId;
         $("#iframe-hidden").dequeue("refreshSessionId");
@@ -762,5 +771,6 @@ try {
 
     rideapp.setUploadStatus = setUploadStatus;
     rideapp.refreshSessionId = refreshSessionId;
-    rideapp.init = init;
+    rideapp.initUserPage = initUserPage;
+    rideapp.initPublicPage = initPublicPage;
 })(jQuery)
