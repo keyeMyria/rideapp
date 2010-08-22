@@ -28,7 +28,7 @@ try {
         var results = [];
         var pending = [];
         var lastPt;
-        var ncheckPts = course.points.length + (course.loop ? 0 : 1);
+        var ncheckPts = course.points.length + (course.loop ? 1 : 0);
         for (var i = 0; i < track.length; i++) {
             var pt = track[i];
             if (i == 0) {
@@ -42,7 +42,7 @@ try {
                 }
                 for (var j = pending.length - 1; j >= 0; j--)
                     if (pending[j].length >= ncheckPts)
-                        result.push(pending.splice(j, 1)[0]);
+                        results.push(pending.splice(j, 1)[0]);
                 if (dist(course.points[0], lastPt) < checkPointRadius && dist(course.points[0], pt) >= checkPointRadius)
                     pending.push([i-1]);
             }

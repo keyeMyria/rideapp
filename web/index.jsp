@@ -146,5 +146,7 @@
   <div id="makeCourseMap"></div>
 </div>
 
+<div id="mainContent"></div>
+
 </body>
 </html>

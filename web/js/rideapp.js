@@ -133,11 +133,6 @@ try {
         map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
     }
 
-    function removeMapOverlays() {
-        for (var i = 0; i < info.tracks.length; i++)
-            tracks[info.tracks[i]].overlay.setMap(null);
-    }
-
     function initUploadFile() {
         $("#uploadFile").change(function() {
             $("#iframe-hidden").queue("refreshSessionId", function(next) {
@@ -352,7 +347,43 @@ try {
     }
 
     function setMainContent() {
-        //...
+        $("#mainContent").empty();
+        for (var i = 0; i < info.courses.length; i++) {
+            var course = info.courses[i];
+            var span = document.createElement("span");
+            $("#mainContent").append(span);
+            $(span).append("course:");
+            var s = document.createElement("span");
+            $(span).append(s);
+            $(s).text(course.name);
+            $(span).append(document.createElement("br"));
+            for (var j = 0; j < info.tracks.length; j++) {
+                var track = tracks[info.tracks[j]];
+                if (!track)
+                    continue;
+                var times = track[course.id];
+                if (!times) {
+                    times = rideapp.findCourses(track.pts, course, 50);
+                    track[course.id] = times;
+                }
+                for (var k = 0; k < times.length; k++) {
+                    var tstart = rideapp.parseTimestamp(track.pts[times[k][0]].t);
+                    var tlast = tstart;
+                    var totalDist = 0;
+                    $(span).append("start:"+tstart);
+                    $(span).append(document.createElement("br"));
+                    for (var l = 0; l < times[k].length; l++) {
+                        var t = rideapp.parseTimestamp(track.pts[times[k][l]].t);
+                        var dist = l == 0 ? 0 : rideapp.integrateDist(track.pts, times[k][l-1], times[k][l]);
+                        totalDist += dist;
+                        $(span).append((l - -1) + ": time:" + rideapp.formatDuration(t-tstart) + " dist:" + rideapp.formatMiles(totalDist) + " speed:" + rideapp.formatSpeed(totalDist, t-tstart) + " segment:" + rideapp.formatDuration(t-tlast) + " " + rideapp.formatMiles(dist) + " " + rideapp.formatSpeed(dist, t-tlast));
+                        tlast = t;
+                        $(span).append(document.createElement("br"));
+                    }
+                }
+            }
+            $(span).append(document.createElement("br"));
+        }
         fetchTracks();
     }
 
@@ -422,6 +453,7 @@ try {
                         ajax("DELETE", "/rest/rival/"+info.rivals[index].user.id, function() {
                             info.rivals.splice(index,1);
                             setRivals();
+                            setMainContent();
                         }, function() {
                             $("#rivalAddRival").show();
                             $("#rivalBusy").hide();
@@ -471,6 +503,7 @@ try {
                     ajax("POST", "/rest/rival/"+id, function(rivals) {
                         info.rivals = rivals;
                         setRivals();
+                        setMainContent();
                     }, setRivals);
                 };
             })(info.friends[i].id));
@@ -533,6 +566,7 @@ try {
                         ajax("DELETE", "/rest/course/"+info.courses[index].id, function() {
                             info.courses.splice(index,1);
                             setCourses();
+                            setMainContent();
                         }, function() {
                             $("#courseAddCourse").show();
                             $("#courseBusy").hide();
@@ -619,6 +653,7 @@ try {
                     }
                     info.courses.push(newCourse);
                     setCourses();
+                    setMainContent();
                 };
             })(courseToEdit), function() {
                 $("#courseAddCourse").show();
