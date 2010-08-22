@@ -7,6 +7,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.activation.DataSource;
 import javax.mail.internet.MimeMultipart;
@@ -30,6 +31,8 @@ import com.yrek.rideapp.facebook.User;
 public class UploadServlet extends HttpServlet {
     private static final long serialVersionUID = 0L;
     private static final Logger LOG = Logger.getLogger(UploadServlet.class.getName());
+
+    private static final Pattern TIMESTAMP = Pattern.compile("[0-9]{4}-?[0-9]{2}-?[0-9]{2}T[0-9]{2}:?[0-9]{2}:?[0-9]{2}([.][0-9]{3})?Z");
 
     @Inject private DB db;
 
@@ -98,13 +101,15 @@ public class UploadServlet extends HttpServlet {
                     time--;
                 } else if ("trkpt".equals(qName)) {
                     trkpt--;
-                    points++;
-                    if (points > maxTrackPoints) {
-                        status[0] = "tracktruncated";
-                    } else {
-                        if (points > 1)
-                            out.print(",");
-                        out.print("{\"lat\":"+lat+",\"lon\":"+lon+",\"t\":\""+timeContent+"\"}");
+                    if (validTime(timeContent) && validDouble(lat) && validDouble(lon)) {
+                        points++;
+                        if (points > maxTrackPoints) {
+                            status[0] = "tracktruncated";
+                        } else {
+                            if (points > 1)
+                                out.print(",");
+                            out.print("{\"lat\":"+lat+",\"lon\":"+lon+",\"t\":\""+timeContent+"\"}");
+                        }
                     }
                 }
                 assert time >= 0;
@@ -118,6 +123,19 @@ public class UploadServlet extends HttpServlet {
             return "nodata";
         db.addTrack(userId, data);
         return status[0];
+    }
+
+    private boolean validTime(StringBuilder timeContent) {
+        return TIMESTAMP.matcher(timeContent).matches();
+    }
+
+    private boolean validDouble(String str) {
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private InputStream getPart(String name, final String contentType, final InputStream inputStream) throws Exception {
