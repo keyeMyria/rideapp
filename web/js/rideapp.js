@@ -348,43 +348,62 @@ try {
 
     function setMainContent() {
         $("#mainContent").empty();
-        for (var i = 0; i < info.courses.length; i++) {
-            var course = info.courses[i];
-            var span = document.createElement("span");
-            $("#mainContent").append(span);
-            $(span).append("course:");
-            var s = document.createElement("span");
-            $(span).append(s);
-            $(s).text(course.name);
-            $(span).append(document.createElement("br"));
-            for (var j = 0; j < info.tracks.length; j++) {
-                var track = tracks[info.tracks[j]];
-                if (!track)
-                    continue;
-                var times = track[course.id];
-                if (!times) {
-                    times = rideapp.findCourses(track.pts, course, 50);
-                    track[course.id] = times;
-                }
-                for (var k = 0; k < times.length; k++) {
-                    var tstart = rideapp.parseTimestamp(track.pts[times[k][0]].t);
-                    var tlast = tstart;
-                    var totalDist = 0;
-                    $(span).append("start:"+tstart);
-                    $(span).append(document.createElement("br"));
-                    for (var l = 0; l < times[k].length; l++) {
-                        var t = rideapp.parseTimestamp(track.pts[times[k][l]].t);
-                        var dist = l == 0 ? 0 : rideapp.integrateDist(track.pts, times[k][l-1], times[k][l]);
-                        totalDist += dist;
-                        $(span).append((l - -1) + ": time:" + rideapp.formatDuration(t-tstart) + " dist:" + rideapp.formatMiles(totalDist) + " speed:" + rideapp.formatSpeed(totalDist, t-tstart) + " segment:" + rideapp.formatDuration(t-tlast) + " " + rideapp.formatMiles(dist) + " " + rideapp.formatSpeed(dist, t-tlast));
-                        tlast = t;
-                        $(span).append(document.createElement("br"));
-                    }
-                }
-            }
-            $(span).append(document.createElement("br"));
-        }
+        for (var i = 0; i < info.courses.length; i++)
+            formatCourse($("#mainContent"), info.courses[i]);
+        for (var i = 0; i < info.rivals.length; i++)
+            for (var j = 0; j < info.rivals[i].courses.length; j++)
+                formatCourse($("#mainContent"), info.rivals[i].courses[j], info.rivals[i].user);
         fetchTracks();
+    }
+
+    function formatCourse(tbody, course, user) {
+        var tr = document.createElement("tr");
+        tbody.append(tr);
+        var th = document.createElement("th");
+        $(tr).append(th);
+        $(th).text(user ? user.name + ": " + course.name : course.name);
+        for (var i = 0; i < info.tracks.length; i++)
+            formatCourseData(tbody, course, tracks[info.tracks[i]]);
+        for (var i = 0; i < info.rivals.length; i++) {
+            var rival = info.rivals[i];
+            for (var j = 0; j < rival.tracks.length; j++)
+                formatCourseData(tbody, course, tracks[rival.user.id + "/" + rival.tracks[j]], rival.user);
+        }
+    }
+
+    function formatCourseData(tbody, course, track, user) {
+        if (!track)
+            return;
+        var id = user ? user.id + "/" + course.id : course.id;
+        var data = track[id];
+        if (!data)
+            data = track[id] = rideapp.findCourses(track.pts, course, 50);
+        for (var i = 0; i < data.length; i++) {
+            var tstart = rideapp.parseTimestamp(track.pts[data[i][0]].t);
+            var tlast = tstart;
+            var totalDist = 0;
+            var trhead = document.createElement("tr");
+            tbody.append(trhead);
+            for (var j = 0; j < data[i].length; j++) {
+                var t = rideapp.parseTimestamp(track.pts[data[i][j]].t);
+                var dist = j == 0 ? 0 : rideapp.integrateDist(track.pts, data[i][j-1], data[i][j]);
+                totalDist += dist;
+                var tr = document.createElement("tr");
+                tbody.append(tr);
+                var td = document.createElement("td");
+                $(tr).append(td);
+                var img = document.createElement("img");
+                $(td).append(img);
+                $(img).attr("src",contextPath+"/img/"+((j%course.points.length)- -1)+".gif");
+                var span = document.createElement("span");
+                $(td).append(span);
+                $(span).text(rideapp.formatDuration(t-tstart) + " " + rideapp.formatMiles(totalDist) + " " + rideapp.formatSpeed(totalDist, t-tstart) + " " + rideapp.formatDuration(t-tlast) + " " + rideapp.formatMiles(dist) + " " + rideapp.formatSpeed(dist,t-tlast));
+                tlast = t;
+            }
+            td = document.createElement("td");
+            $(trhead).append(td);
+            $(td).text((user ? user.name + ": " : "") + rideapp.formatDate(tstart) + " " + rideapp.formatTime(tstart) + ": " + rideapp.formatDuration(t-tstart) + " " + rideapp.formatMiles(totalDist) + " " + rideapp.formatSpeed(totalDist, t-tstart));
+        }
     }
 
     var chooseRivalIndex = 0;
@@ -705,6 +724,8 @@ try {
                 $("#makeCourse").hide();
             });
             $("#makeCourseAdd").click(function() { makeCourseAdd(); });
+        } else {
+            google.maps.event.trigger(makeCourseMap, "resize");
         }
         if (oldCourse) {
             $("#makeCourseAdd").val("Save course");
@@ -726,12 +747,12 @@ try {
                 makeCourseMarkers[i].setMap(makeCourseMap);
             }
             makeCourseMap.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
-            enableDisableAddCourse();
         } else {
             $("#makeCourseAdd").val("Add course");
             makeCourseMap.setCenter(map.getCenter());
             makeCourseMap.setZoom(14);
         }
+        enableDisableAddCourse();
     }
 
     function refreshSessionId(newSessionId) {
