@@ -426,12 +426,21 @@ try {
         var id = user ? user.id + "/" + course.id : course.id;
         var data = track[id];
         if (!data)
-            data = track[id] = rideapp.findCourses(track.pts, course, 50);
+            data = track[id] = rideapp.findCourses(track.pts, course, 30);
+
+        function makeMapSegment(startIndex, endIndex) {
+            return function() {
+                setOverlays(course, track.pts, startIndex, endIndex+1);
+                fitMapToPoints(track.pts, startIndex, endIndex+1);
+            };
+        }
+
         for (var i = 0; i < data.length; i++) {
             var tstart = rideapp.parseTimestamp(track.pts[data[i][0]].t);
             var tlast = tstart;
             var totalDist = 0;
             var trhead = document.createElement("tr");
+            var rowElts = [];
             tbody.append(trhead);
             $(trhead).addClass("courseTime");
             var lastRow;
@@ -441,59 +450,92 @@ try {
                 totalDist += dist;
                 var tr = document.createElement("tr");
                 tbody.append(tr);
+                $(tr).hide();
                 $(tr).addClass("checkpoint");
                 $(tr).addClass(j%2 ? "even" : "odd");
+                rowElts.push(tr);
+
+                var clickLeft = (function(courseIndex, startIndex, endIndex) {
+                    return function() {
+                        if (courseIndex > 0)
+                            setOverlays(course, track.pts, startIndex, endIndex);
+                        else
+                            setOverlays(course);
+                        map.setCenter(new google.maps.LatLng(course.points[courseIndex%course.points.length].lat, course.points[courseIndex%course.points.length].lon));
+                        map.setZoom(15);
+                    };
+                })(j, j > 0 ? data[i][j-1] : 0, data[i][j]);
+                var clickRight = makeMapSegment(data[i][j-1], data[i][j]);
 
                 var td = document.createElement("td");
                 $(tr).append(td);
-                var img = document.createElement("img");
-                $(td).append(img);
-                $(img).attr("src",contextPath+"/img/"+((j%course.points.length)- -1)+".gif");
-                $(img).click(function() { alert("under construction"); });
-
+                $(td).click(clickLeft);
                 td = document.createElement("td");
                 $(tr).append(td);
                 $(td).text(rideapp.formatDuration(t-tstart));
+                $(td).click(clickLeft);
                 td = document.createElement("td");
                 $(tr).append(td);
                 $(td).text(rideapp.formatMiles(totalDist));
+                $(td).click(clickLeft);
                 td = document.createElement("td");
                 $(tr).append(td);
                 $(td).text(rideapp.formatSpeed(totalDist,t-tstart));
+                $(td).click(clickLeft);
                 if (j > 0) {
                     td = document.createElement("td");
                     $(lastRow).append(td);
                     $(td).text(rideapp.formatDuration(t-tlast));
+                    $(td).click(clickRight);
                     td = document.createElement("td");
                     $(lastRow).append(td);
                     $(td).text(rideapp.formatMiles(dist));
+                    $(td).click(clickRight);
                     td = document.createElement("td");
                     $(lastRow).append(td);
                     $(td).text(rideapp.formatSpeed(dist,t-tlast));
+                    $(td).click(clickRight);
                 }
                 lastRow = tr;
                 tlast = t;
             }
             td = document.createElement("td");
             $(trhead).append(td);
-            $(td).addClass("expander");
             $(td).text("+");
-            $(td).click(function() { alert("under construction"); });
+            var onclick = (function(rowElts,td) {
+                return function() {
+                    if ($(td).text() == "+") {
+                        $(td).text("-");
+                        for (var k = 0; k < rowElts.length; k++)
+                            $(rowElts[k]).show();
+                    } else {
+                        $(td).text("+");
+                        for (var k = 0; k < rowElts.length; k++)
+                            $(rowElts[k]).hide();
+                    }
+                };
+            })(rowElts,td)
+            $(td).click(onclick);
 
             td = document.createElement("td");
             $(trhead).append(td);
             $(td).attr("colspan", "3");
             $(td).text(rideapp.formatDate(tstart) + " " + rideapp.formatTime(tstart));
+            $(td).click(onclick);
 
+            onclick = makeMapSegment(data[i][0], data[i][data[i].length-1]);
             td = document.createElement("td");
             $(trhead).append(td);
             $(td).text(rideapp.formatDuration(t-tstart));
+            $(td).click(onclick);
             td = document.createElement("td");
             $(trhead).append(td);
             $(td).text(rideapp.formatMiles(totalDist));
+            $(td).click(onclick);
             td = document.createElement("td");
             $(trhead).append(td);
             $(td).text(rideapp.formatSpeed(totalDist, t-tstart));
+            $(td).click(onclick);
         }
     }
 

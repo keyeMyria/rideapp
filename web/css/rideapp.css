@@ -76,7 +76,7 @@
 }
 
 tr.courseTitle {
-    background-color: #fcf;
+    background-color: #fff;
 }
 
 tr.courseTitle th {
@@ -89,15 +89,12 @@ tr.courseTitle td.courseOwner {
 }
 
 tr.courseTime {
-    background-color: #cfc;
-}
-
-tr.courseTime td.expander {
+    background-color: #ddf;
     cursor: pointer;
-    text-align: left;
 }
 
 tr.checkpoint {
+    cursor: pointer;
 }
 
 tr.even {
@@ -105,5 +102,5 @@ tr.even {
 }
 
 tr.odd {
-    background-color: #ffe;
+    background-color: #fef;
 }
