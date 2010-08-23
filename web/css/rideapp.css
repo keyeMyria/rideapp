@@ -48,8 +48,11 @@
     border-color: black;
 }
 
-#map {
+#map, #mainContentTable {
     width: 470px;
+}
+
+#map {
     height: 300px;
 }
 
@@ -70,4 +73,37 @@
 }
 
 .instructions {
+}
+
+tr.courseTitle {
+    background-color: #fcf;
+}
+
+tr.courseTitle th {
+    text-align: left;
+    cursor: pointer;
+}
+
+tr.courseTitle td.courseOwner {
+    text-align: right;
+}
+
+tr.courseTime {
+    background-color: #cfc;
+}
+
+tr.courseTime td.expander {
+    cursor: pointer;
+    text-align: left;
+}
+
+tr.checkpoint {
+}
+
+tr.even {
+    background-color: #eff;
+}
+
+tr.odd {
+    background-color: #ffe;
 }

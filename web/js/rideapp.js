@@ -119,7 +119,7 @@ try {
         }
     }
 
-    function fitMap(pts, startIndex, endIndex) {
+    function fitMapToPoints(pts, startIndex, endIndex) {
         var minLat = pts[startIndex].lat;
         var maxLat = pts[startIndex].lat;
         var minLon = pts[startIndex].lon;
@@ -129,6 +129,20 @@ try {
             maxLat = Math.max(maxLat, pts[i].lat);
             minLon = Math.min(minLon, pts[i].lon);
             maxLon = Math.max(maxLon, pts[i].lon);
+        }
+        map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
+    }
+
+    function fitMapToCourse(course) {
+        var minLat = course.points[0].lat;
+        var maxLat = course.points[0].lat;
+        var minLon = course.points[0].lon;
+        var maxLon = course.points[0].lon;
+        for (var i = 0; i < course.points.length; i++) {
+            minLat = Math.min(minLat, course.points[i].lat);
+            maxLat = Math.max(maxLat, course.points[i].lat);
+            minLon = Math.min(minLon, course.points[i].lon);
+            maxLon = Math.max(maxLon, course.points[i].lon);
         }
         map.fitBounds(new google.maps.LatLngBounds(new google.maps.LatLng(minLat,minLon), new google.maps.LatLng(maxLat,maxLon)));
     }
@@ -275,7 +289,7 @@ try {
                 $(td).click((function(track) {
                     return function() {
                         setOverlays(null, track.pts, 0, track.pts.length);
-                        fitMap(track.pts, 0, track.pts.length);
+                        fitMapToPoints(track.pts, 0, track.pts.length);
                     };
                 })(tracks[info.tracks[i]]));
             } else {
@@ -359,9 +373,44 @@ try {
     function formatCourse(tbody, course, user) {
         var tr = document.createElement("tr");
         tbody.append(tr);
-        var th = document.createElement("th");
-        $(tr).append(th);
-        $(th).text(user ? user.name + ": " + course.name : course.name);
+        $(tr).addClass("courseTitle");
+        var td = document.createElement("th");
+        $(tr).append(td);
+        $(td).text(course.name);
+        $(td).click(function() { setOverlays(course); fitMapToCourse(course); });
+        if (!user) {
+            $(td).attr("colspan","7");
+        } else {
+            $(td).attr("colspan","4");
+            td = document.createElement("td");
+            $(tr).append(td);
+            $(td).attr("colspan","3");
+            $(td).addClass("courseOwner");
+            var span = document.createElement("span");
+            $(td).append(span);
+            $(span).text(user.name);
+            var button = document.createElement("input");
+            $(td).append(button);
+            $(button).attr("type", "button");
+            $(button).val("Copy course");
+            if (info.course.length >= info.maxCourses) {
+                $(button).attr("disabled", "true");
+            } else {
+                $(button).click(function() {
+                    $("#courseAddCourse").hide();
+                    $("#courseBusy").show();
+                    ajax("POST", "/rest/course", function(newCourse) {
+                        info.courses.push(newCourse);
+                        setCourses();
+                        setMainContent();
+                    }, function() {
+                        $("#courseAddCourse").show();
+                        $("#courseBusy").hide();
+                    }, $.toJSON(course), "application/json");
+                });
+            }
+        }
+
         for (var i = 0; i < info.tracks.length; i++)
             formatCourseData(tbody, course, tracks[info.tracks[i]]);
         for (var i = 0; i < info.rivals.length; i++) {
@@ -384,25 +433,67 @@ try {
             var totalDist = 0;
             var trhead = document.createElement("tr");
             tbody.append(trhead);
+            $(trhead).addClass("courseTime");
+            var lastRow;
             for (var j = 0; j < data[i].length; j++) {
                 var t = rideapp.parseTimestamp(track.pts[data[i][j]].t);
                 var dist = j == 0 ? 0 : rideapp.integrateDist(track.pts, data[i][j-1], data[i][j]);
                 totalDist += dist;
                 var tr = document.createElement("tr");
                 tbody.append(tr);
+                $(tr).addClass("checkpoint");
+                $(tr).addClass(j%2 ? "even" : "odd");
+
                 var td = document.createElement("td");
                 $(tr).append(td);
                 var img = document.createElement("img");
                 $(td).append(img);
                 $(img).attr("src",contextPath+"/img/"+((j%course.points.length)- -1)+".gif");
-                var span = document.createElement("span");
-                $(td).append(span);
-                $(span).text(rideapp.formatDuration(t-tstart) + " " + rideapp.formatMiles(totalDist) + " " + rideapp.formatSpeed(totalDist, t-tstart) + " " + rideapp.formatDuration(t-tlast) + " " + rideapp.formatMiles(dist) + " " + rideapp.formatSpeed(dist,t-tlast));
+                $(img).click(function() { alert("under construction"); });
+
+                td = document.createElement("td");
+                $(tr).append(td);
+                $(td).text(rideapp.formatDuration(t-tstart));
+                td = document.createElement("td");
+                $(tr).append(td);
+                $(td).text(rideapp.formatMiles(totalDist));
+                td = document.createElement("td");
+                $(tr).append(td);
+                $(td).text(rideapp.formatSpeed(totalDist,t-tstart));
+                if (j > 0) {
+                    td = document.createElement("td");
+                    $(lastRow).append(td);
+                    $(td).text(rideapp.formatDuration(t-tlast));
+                    td = document.createElement("td");
+                    $(lastRow).append(td);
+                    $(td).text(rideapp.formatMiles(dist));
+                    td = document.createElement("td");
+                    $(lastRow).append(td);
+                    $(td).text(rideapp.formatSpeed(dist,t-tlast));
+                }
+                lastRow = tr;
                 tlast = t;
             }
             td = document.createElement("td");
             $(trhead).append(td);
-            $(td).text((user ? user.name + ": " : "") + rideapp.formatDate(tstart) + " " + rideapp.formatTime(tstart) + ": " + rideapp.formatDuration(t-tstart) + " " + rideapp.formatMiles(totalDist) + " " + rideapp.formatSpeed(totalDist, t-tstart));
+            $(td).addClass("expander");
+            $(td).text("+");
+            $(td).click(function() { alert("under construction"); });
+
+            td = document.createElement("td");
+            $(trhead).append(td);
+            $(td).attr("colspan", "3");
+            $(td).text(rideapp.formatDate(tstart) + " " + rideapp.formatTime(tstart));
+
+            td = document.createElement("td");
+            $(trhead).append(td);
+            $(td).text(rideapp.formatDuration(t-tstart));
+            td = document.createElement("td");
+            $(trhead).append(td);
+            $(td).text(rideapp.formatMiles(totalDist));
+            td = document.createElement("td");
+            $(trhead).append(td);
+            $(td).text(rideapp.formatSpeed(totalDist, t-tstart));
         }
     }
 
