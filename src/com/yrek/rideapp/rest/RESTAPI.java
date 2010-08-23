@@ -75,6 +75,7 @@ public class RESTAPI {
     public static class UserInfo {
         @XmlElement public User user;
         @XmlElement public Point home;
+        @XmlElement public double checkpointRadius;
     }
 
     @GET @Path("/info")
@@ -122,6 +123,7 @@ public class RESTAPI {
             return null;
         UserInfo userInfo = new UserInfo();
         userInfo.user = user;
+        userInfo.checkpointRadius = 30.0;
         db.setUserInfo(user.getId(), objectMapper.writeValueAsBytes(userInfo));
         return userInfo;
     }

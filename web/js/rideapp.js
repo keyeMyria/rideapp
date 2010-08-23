@@ -426,7 +426,7 @@ try {
         var id = user ? user.id + "/" + course.id : course.id;
         var data = track[id];
         if (!data)
-            data = track[id] = rideapp.findCourses(track.pts, course, 30);
+            data = track[id] = rideapp.findCourses(track.pts, course, info.userInfo.checkpointRadius);
 
         function makeMapSegment(startIndex, endIndex) {
             return function() {
