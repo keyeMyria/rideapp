@@ -500,6 +500,10 @@ try {
                 tlast = t;
             }
             td = document.createElement("td");
+            $(lastRow).append(td);
+            $(td).attr("colspan", "3");
+
+            td = document.createElement("td");
             $(trhead).append(td);
             $(td).text("+");
             var onclick = (function(rowElts,td) {

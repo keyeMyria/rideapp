@@ -150,6 +150,8 @@
   <tbody id="mainContent"></tbody>
 </table>
 
+<br clear="both"/>
+
 </body>
 <script src="http://static.ak.connect.facebook.com/js/api_lib/v0.4/FeatureLoader.js.php" type="text/javascript"></script>
 <script type="text/javascript">FB_RequireFeatures(["CanvasUtil"],function(){FB.XdComm.Server.init("xd_receiver.html");FB.CanvasClient.startTimerToSizeToContent();});</script>
