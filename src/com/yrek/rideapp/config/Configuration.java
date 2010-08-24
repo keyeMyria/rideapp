@@ -28,6 +28,10 @@ import com.google.inject.servlet.ServletModule;
 import com.sun.jersey.api.container.filter.LoggingFilter;
 import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 
+import org.codehaus.jackson.map.DeserializationConfig;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import com.yrek.rideapp.facebook.FacebookClient;
 import com.yrek.rideapp.facebook.FacebookOAuth2Client;
 import com.yrek.rideapp.facebook.FacebookOAuth2Session;
@@ -41,6 +45,7 @@ import com.yrek.rideapp.servlet.PingServlet;
 import com.yrek.rideapp.servlet.PublicJSPServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
+import com.yrek.rideapp.servlet.UserServlet;
 import com.yrek.rideapp.storage.FileStorage;
 import com.yrek.rideapp.storage.MemcachedStorage;
 import com.yrek.rideapp.storage.Storage;
@@ -61,7 +66,7 @@ public class Configuration extends GuiceServletContextListener {
             throw new RuntimeException(e);
         }
 
-        return Guice.createInjector(new ServletModule() {
+        Injector injector = Guice.createInjector(new ServletModule() {
             private static final long serialVersionUID = 0L;
 
             @Override
@@ -72,8 +77,10 @@ public class Configuration extends GuiceServletContextListener {
                 bind(RESTAPI.class);
 
                 serve("/oauth2").with(OAuth2Servlet.class);
-                filter("*.jsp").through(OAuth2Filter.class);
-                filter("*.jsp").through(SetAttributesFilter.class);
+                // Stupid Guice bugs 455/522
+                // serve("/user/*").with(UserServlet.class); 
+                filter("/index.jsp").through(OAuth2Filter.class);
+                filter("/index.jsp").through(SetAttributesFilter.class);
                 filter("/rest/*").through(RESTAuthFilter.class);
                 serve("/ping").with(PingServlet.class);
                 serve("/public/*").with(PublicJSPServlet.class);
@@ -143,7 +150,20 @@ public class Configuration extends GuiceServletContextListener {
             FileStorage provideFileStorage() {
                 return new FileStorage(new File(properties.getProperty("storage.dir")));
             }
+
+            @Provides @Singleton
+            ObjectMapper provideObjectMapper() {
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.getDeserializationConfig().disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
+                objectMapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+                return objectMapper;
+            }
         });
+        // Stupid Guice bugs 455/522
+        UserServlet.objectMapper = injector.getInstance(ObjectMapper.class);
+        UserServlet.restAPI = injector.getInstance(RESTAPI.class);
+        UserServlet.db = injector.getInstance(com.yrek.rideapp.data.DB.class);
+        return injector;
     }
 
     @Override

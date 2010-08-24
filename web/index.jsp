@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>rideapp</title>
-<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/rideapp.css"></link>
+<link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/css/rideapp.css"/>
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js" type="text/javascript"></script>
 <script type="text/javascript">jQuery.noConflict()</script>

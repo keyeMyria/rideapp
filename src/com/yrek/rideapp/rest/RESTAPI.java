@@ -20,9 +20,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.google.inject.Inject;
 
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.yrek.rideapp.data.DB;
 import com.yrek.rideapp.facebook.User;
@@ -32,12 +30,7 @@ import com.yrek.rideapp.facebook.Users;
 public class RESTAPI {
     private static final Logger LOG = Logger.getLogger(RESTAPI.class.getName());
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    {
-        objectMapper.getDeserializationConfig().disable(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES);
-        objectMapper.getSerializationConfig().setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
-    }
-
+    @Inject private ObjectMapper objectMapper;
     @Inject private DB db;
 
     public static class Point {
@@ -86,6 +79,24 @@ public class RESTAPI {
         result.tracks = tracks(request);
         result.courses = courses(request);
         result.userInfo = userInfo(request);
+        return result;
+    }
+
+    public Info info(String userId) throws IOException {
+        byte[] userInfo = db.getUserInfo(userId);
+        if (userInfo == null)
+            return null;
+        Info result = new Info();
+        result.maxTrackPoints = db.getMaxTrackPoints(userId);
+        result.maxCoursePoints = db.getMaxCoursePoints(userId);
+        result.maxTracks = db.getMaxTracks(userId);
+        result.maxCourses = db.getMaxCourses(userId);
+        result.maxRivals = db.getMaxRivals(userId);
+        result.maxNameLength = db.getMaxNameLength(userId);
+        result.rivals = new ArrayList<Rival>();
+        result.tracks = db.listTracks(userId);
+        result.courses = courses(userId);
+        result.userInfo = objectMapper.readValue(userInfo, 0, userInfo.length, UserInfo.class);
         return result;
     }
 

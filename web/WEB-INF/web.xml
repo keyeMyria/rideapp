@@ -3,6 +3,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-app_2_4.xsd"
     version="2.4">
+  <!-- Stupid Guice bugs 455/522 -->
+  <servlet><servlet-name>user</servlet-name><servlet-class>com.yrek.rideapp.servlet.UserServlet</servlet-class></servlet><servlet-mapping><servlet-name>user</servlet-name><url-pattern>/user/*</url-pattern></servlet-mapping>
+
   <filter>
     <filter-name>filter</filter-name>
     <filter-class>com.google.inject.servlet.GuiceFilter</filter-class>

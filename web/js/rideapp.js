@@ -66,6 +66,16 @@ try {
 
     function initInfo(newInfo) {
         info = newInfo;
+        initMap();
+        initRivals();
+        setRivals();
+        initCourses();
+        setCourses();
+        setTracks();
+        setMainContent();
+    }
+
+    function initMap() {
         if (map.getZoom() == 3) {
             if (info.userInfo.home) {
                 map.setCenter(new google.maps.LatLng(info.userInfo.home.lat, info.userInfo.home.lon));
@@ -92,13 +102,6 @@ try {
             strokeOpacity:0.9,
             strokeWeight:3
         });
-
-        initRivals();
-        setRivals();
-        initCourses();
-        setCourses();
-        setTracks();
-        setMainContent();
     }
 
     function setOverlays(course, pts, startIndex, endIndex) {
@@ -897,13 +900,19 @@ try {
         enableDisableAddCourse();
     }
 
-    function initPublicPage(userInfo, initInfo) {
+    function initPublicPage(initContextPath, initInfo, initTracks) {
+        contextPath = initContextPath;
         info = initInfo;
-        $("#publicUser").text(userInfo.user.name);
-        $("#publicUser").attr("href", userInfo.user.link);
-        $("#publicContent").empty();
+        tracks = initTracks;
+        info.rivals = [];
+
+        $("#publicUser").text(initInfo.userInfo.user.name);
+        $("#publicUser").attr("href", initInfo.userInfo.user.link);
+        $("#mainContent").empty();
+        map = new google.maps.Map(document.getElementById("map"), { mapTypeId:google.maps.MapTypeId.ROADMAP, zoom:3, center:new google.maps.LatLng(39,-98) });
+        initMap();
         for (var i = 0; i < info.courses.length; i++)
-            formatCourse($("#publicContent"), info.courses[i]);
+            formatCourse($("#mainContent"), info.courses[i]);
     }
 
     function refreshSessionId(newSessionId) {
