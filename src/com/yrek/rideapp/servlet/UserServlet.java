@@ -33,12 +33,16 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String userId = request.getPathInfo();
-        LOG.fine("pathInfo="+userId);
+        if (userId != null)
+            userId = userId.substring(1);
+        if (userId == null)
+            userId = request.getParameter("fb_sig_profile_user");
+        if (userId == null)
+            userId = request.getParameter("user");
         if (userId == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
-        userId = userId.substring(1);
         RESTAPI.Info restapiInfo = restAPI.info(userId);
         if (restapiInfo == null) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
