@@ -22,6 +22,9 @@
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
+<script type="text/javascript" src="http://connect.facebook.net/en_US/all.js"></script>
+<script type="text/javascript">FB.init({appId:"${facebookApplicationId}"})</script>
+
 <script src="${pageContext.request.contextPath}/js/rideapp-util.js" type="text/javascript"></script>
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
@@ -29,7 +32,16 @@
 <body id="body" onload="rideapp.initUserPage('${pageContext.request.contextPath}','${sessionId}', ${garminUnlock})">
 <iframe id="iframe-hidden" style="position:absolute; top:0px; left:0px; width: 0px; height: 0px; border: none;"></iframe>
 
-<span style="float:right">
+<table><tbody><tr><td valign="top">
+
+<div id="map"></div>
+
+<table id="mainContentTable" cellspacing="0">
+  <tbody id="mainContent"></tbody>
+</table>
+
+</td><td valign="top">
+
   <span class="widget" title="Record">
     <form id="uploadForm" target="iframe-hidden"
           action="${pageContext.request.contextPath}/rest/upload;jsessionid=${sessionId}"
@@ -109,9 +121,8 @@
     <input id="rivalAddRival" type="button" value="Add rival" disabled="true"/>
     <img id="rivalBusy" style="display:none;" src="${pageContext.request.contextPath}/img/working.gif"/>
   </span>
-</span>
 
-<div id="map"></div>
+</td></tr></tbody></table>
 
 <table id="chooseRival" style="display:none;" cellspacing="0" title="Rival">
   <tbody id="chooseRivalList" class="chooseList"></tbody>
@@ -146,13 +157,7 @@
   <div id="makeCourseMap"></div>
 </div>
 
-<table id="mainContentTable" cellspacing="0">
-  <tbody id="mainContent"></tbody>
-</table>
-
-<br clear="both"/>
+<div id="fb-root" style="display:none;"></div>
 
 </body>
-<script src="http://static.ak.connect.facebook.com/js/api_lib/v0.4/FeatureLoader.js.php" type="text/javascript"></script>
-<script type="text/javascript">FB_RequireFeatures(["CanvasUtil"],function(){FB.XdComm.Server.init("xd_receiver.html");FB.CanvasClient.startTimerToSizeToContent();});</script>
 </html>

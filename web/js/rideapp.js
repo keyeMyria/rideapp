@@ -8,6 +8,8 @@ try {
     var sessionId;
     var garminUnlock;
 
+    var resizer = function () { if (FB && FB.Canvas) FB.Canvas.setSize(); };
+
     var info;
     var map;
     var tracks = {};
@@ -368,6 +370,7 @@ try {
             for (var j = 0; j < info.rivals[i].courses.length; j++)
                 formatCourse($("#mainContent"), info.rivals[i].courses[j], info.rivals[i].user);
         fetchTracks();
+        resizer();
     }
 
     function formatCourse(tbody, course, user) {
@@ -517,6 +520,7 @@ try {
                         for (var k = 0; k < rowElts.length; k++)
                             $(rowElts[k]).hide();
                     }
+                    resizer();
                 };
             })(rowElts,td)
             $(td).click(onclick);

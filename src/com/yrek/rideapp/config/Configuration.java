@@ -104,7 +104,7 @@ public class Configuration extends GuiceServletContextListener {
 
             @Provides @Singleton
             SetAttributesFilter provideSetAttributesFilter(FacebookClient facebookClient) {
-                return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"));
+                return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"), properties.getProperty("facebook.clientID"));
             }
 
             @Provides @Singleton
