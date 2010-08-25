@@ -14,6 +14,8 @@ import javax.servlet.ServletContextEvent;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.ec2.AmazonEC2;
+import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 
@@ -46,6 +48,7 @@ import com.yrek.rideapp.servlet.PublicJSPServlet;
 import com.yrek.rideapp.servlet.SetAttributesFilter;
 import com.yrek.rideapp.servlet.UploadServlet;
 import com.yrek.rideapp.servlet.UserServlet;
+import com.yrek.rideapp.storage.EC2MemcachedStorage;
 import com.yrek.rideapp.storage.FileStorage;
 import com.yrek.rideapp.storage.MemcachedStorage;
 import com.yrek.rideapp.storage.Storage;
@@ -132,6 +135,18 @@ public class Configuration extends GuiceServletContextListener {
             }
 
             @Provides @Singleton
+            AmazonEC2 provideAmazonEC2(AWSCredentials credentials) {
+                final AmazonEC2Client amazonEC2 = new AmazonEC2Client(credentials);
+                closeables.add(0, new Closeable() {
+                    @Override
+                    public void close() {
+                        amazonEC2.shutdown();
+                    }
+                });
+                return amazonEC2;
+            }
+
+            @Provides @Singleton
             S3Storage provideS3Storage(AmazonS3 amazonS3) {
                 return new S3Storage(amazonS3, properties.getProperty("aws.s3.bucketName"), properties.getProperty("aws.s3.prefix"));
             }
@@ -144,6 +159,13 @@ public class Configuration extends GuiceServletContextListener {
                 MemcachedStorage memcachedStorage = new MemcachedStorage(s3Storage, "~", 864000, addresses);
                 closeables.add(0, memcachedStorage);
                 return memcachedStorage;
+            }
+
+            @Provides @Singleton
+            EC2MemcachedStorage provideEC2MemcachedStorage(S3Storage s3Storage, AmazonEC2 amazonEC2) throws IOException {
+                EC2MemcachedStorage ec2MemcachedStorage = new EC2MemcachedStorage(s3Storage, "~", 864000, amazonEC2, properties.getProperty("memcached.ec2-pool.securityGroup"), Integer.parseInt(properties.getProperty("memcached.port")), Integer.parseInt(properties.getProperty("memcached.ec2-poll.pollIntervalMinutes")));
+                closeables.add(0, ec2MemcachedStorage);
+                return ec2MemcachedStorage;
             }
 
             @Provides @Singleton
