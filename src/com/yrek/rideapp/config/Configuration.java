@@ -162,7 +162,7 @@ public class Configuration extends GuiceServletContextListener {
         // Stupid Guice bugs 455/522
         UserServlet.objectMapper = injector.getInstance(ObjectMapper.class);
         UserServlet.restAPI = injector.getInstance(RESTAPI.class);
-        UserServlet.db = injector.getInstance(com.yrek.rideapp.data.DB.class);
+        UserServlet.db = injector.getInstance(com.yrek.rideapp.storage.DB.class);
         return injector;
     }
 

@@ -24,8 +24,8 @@ import org.xml.sax.helpers.DefaultHandler;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.yrek.rideapp.data.DB;
 import com.yrek.rideapp.facebook.User;
+import com.yrek.rideapp.storage.DB;
 
 @Singleton
 public class UploadServlet extends HttpServlet {

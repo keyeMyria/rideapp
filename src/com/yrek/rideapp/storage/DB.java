@@ -1,4 +1,4 @@
-package com.yrek.rideapp.data;
+package com.yrek.rideapp.storage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -10,8 +10,6 @@ import java.util.logging.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import com.yrek.rideapp.storage.Storage;
 
 @Singleton
 public class DB {

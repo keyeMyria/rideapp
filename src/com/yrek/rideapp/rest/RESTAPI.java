@@ -22,9 +22,9 @@ import com.google.inject.Inject;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.yrek.rideapp.data.DB;
 import com.yrek.rideapp.facebook.User;
 import com.yrek.rideapp.facebook.Users;
+import com.yrek.rideapp.storage.DB;
 
 @Path("/")
 public class RESTAPI {

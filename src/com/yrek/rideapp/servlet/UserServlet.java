@@ -13,8 +13,8 @@ import com.google.inject.Singleton;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.yrek.rideapp.data.DB;
 import com.yrek.rideapp.rest.RESTAPI;
+import com.yrek.rideapp.storage.DB;
 
 @Singleton
 public class UserServlet extends HttpServlet {
