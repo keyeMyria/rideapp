@@ -10,6 +10,8 @@
 
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
+<script type="text/javascript" src="http://connect.facebook.net/en_US/all.js"></script>
+
 <script src="${pageContext.request.contextPath}/js/rideapp-util.js" type="text/javascript"></script>
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
@@ -23,6 +25,8 @@
 <table id="mainContentTable" cellspacing="0">
   <tbody id="mainContent"></tbody>
 </table>
+
+<div id="fb-root" style="display:none;"></div>
 
 </body>
 </html>

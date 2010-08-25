@@ -93,6 +93,12 @@ tr.courseTime {
     cursor: pointer;
 }
 
+tr.courseTime .user {
+    font-size: x-small;
+    color: #442;
+    cursor: pointer;
+}
+
 tr.checkpoint {
     cursor: pointer;
 }

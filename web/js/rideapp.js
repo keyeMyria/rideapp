@@ -291,7 +291,7 @@ try {
                 $(td).addClass("chooseItem");
                 var date = rideapp.parseTimestamp(tracks[info.tracks[i]].pts[0].t);
                 $(td).text(rideapp.formatDate(date));
-                $(td).attr("title", rideapp.formatTime(date));
+                $(td).attr("title", date.toString());
                 $(td).click((function(track) {
                     return function() {
                         setOverlays(null, track.pts, 0, track.pts.length);
@@ -532,7 +532,22 @@ try {
             td = document.createElement("td");
             $(trhead).append(td);
             $(td).attr("colspan", "3");
-            $(td).text(rideapp.formatDate(tstart) + " " + rideapp.formatTime(tstart));
+            var span = document.createElement("span");
+            $(span).text(rideapp.formatDate(tstart) + " ");
+            $(td).append(span);
+            $(td).attr("title", tstart.toString());
+            var span = document.createElement("span");
+            $(span).addClass("user");
+            if (user) {
+                $(span).text(user.name);
+                $(span).attr("title", "Go to " + user.name);
+                $(span).click(function() {
+                    document.location = contextPath+"/user/"+user.id;
+                });
+            } else {
+                $(span).text(info.userInfo.user.name);
+            }
+            $(td).append(span);
             $(td).click(onclick);
 
             onclick = makeMapSegment(data[i][0], data[i][data[i].length-1]);
@@ -601,9 +616,15 @@ try {
                 $("#rivalList").append(tr);
                 var td = document.createElement("td");
                 $(tr).append(td);
-                $(td).addClass("chooseItem");
                 $(td).text(info.rivals[i].user.name);
-                $(td).click(function() { alert("under construction"); });
+                if (info.rivals[i].userInfo) {
+                    $(td).addClass("chooseItem");
+                    $(td).click((function(rivalId) {
+                        return function() {
+                            window.open(contextPath+"/user/"+rivalId);
+                        };
+                    })(info.rivals[i].user.id));
+                }
                 td = document.createElement("td");
                 $(tr).append(td);
                 $(td).addClass("chooseItemRight");
