@@ -79,8 +79,8 @@ public class Configuration extends GuiceServletContextListener {
                 serve("/oauth2").with(OAuth2Servlet.class);
                 // Stupid Guice bugs 455/522
                 // serve("/user/*").with(UserServlet.class); 
-                filter("/index.jsp").through(OAuth2Filter.class);
-                filter("/index.jsp").through(SetAttributesFilter.class);
+                filter("/index.jsp","/refreshSession.jsp").through(OAuth2Filter.class);
+                filter("/index.jsp","/refreshSession.jsp").through(SetAttributesFilter.class);
                 filter("/rest/*").through(RESTAuthFilter.class);
                 serve("/ping").with(PingServlet.class);
                 serve("/public/*").with(PublicJSPServlet.class);
