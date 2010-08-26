@@ -1,5 +1,6 @@
 package com.yrek.rideapp.config;
 
+import java.util.HashMap;
 import java.util.Properties;
 
 import com.yrek.rideapp.facebook.FacebookOAuth2Client;
@@ -19,5 +20,11 @@ class LocalS3Module extends BaseModule {
         bind(OAuth2Client.class).to(FacebookOAuth2Client.class);
         bind(OAuth2Session.class).to(FacebookOAuth2Session.class);
         bind(Storage.class).to(MemcachedStorage.class);
+    }
+
+    protected HashMap<String,String> jerseyParams() {
+        HashMap<String,String> properties = super.jerseyParams();
+        properties.remove("com.sun.jersey.spi.container.ContainerResponseFilters");
+        return properties;
     }
 }

@@ -84,7 +84,7 @@ abstract class BaseModule extends ServletModule {
         serve("/rest/*").with(GuiceContainer.class, jerseyParams());
     }
 
-    private HashMap<String,String> jerseyParams() {
+    protected HashMap<String,String> jerseyParams() {
         HashMap<String,String> properties = new HashMap<String,String>();
         properties.put("com.sun.jersey.spi.container.ContainerRequestFilters", LoggingFilter.class.getName());
         properties.put("com.sun.jersey.spi.container.ContainerResponseFilters", LoggingFilter.class.getName());
