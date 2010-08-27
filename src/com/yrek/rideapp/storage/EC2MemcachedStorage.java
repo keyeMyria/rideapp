@@ -76,8 +76,11 @@ public class EC2MemcachedStorage  extends BaseMemcachedStorage implements Closea
         for (Reservation reservation : amazonEC2.describeInstances().getReservations()) {
             if (!reservation.getGroupNames().contains(securityGroup))
                 continue;
-            for (Instance instance : reservation.getInstances())
-                list.add(new InetSocketAddress(instance.getPrivateIpAddress(), memcachedPort));
+            for (Instance instance : reservation.getInstances()) {
+                String ipAddress = instance.getPrivateIpAddress();
+                if (ipAddress != null)
+                    list.add(new InetSocketAddress(ipAddress, memcachedPort));
+            }
         }
         LOG.fine("addresses="+addresses);
         return list;
