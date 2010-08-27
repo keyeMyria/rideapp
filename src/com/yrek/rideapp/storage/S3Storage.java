@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.Headers;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -72,6 +73,7 @@ public class S3Storage implements Storage {
     public void writeFile(String path, byte[] content) {
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setContentLength(content.length);
+        objectMetadata.addUserMetadata(Headers.STORAGE_CLASS, "REDUCED_REDUNDANCY");
         amazonS3.putObject(bucketName, prefix + path, new ByteArrayInputStream(content), objectMetadata);
     }
 }
