@@ -155,7 +155,7 @@ abstract class BaseModule extends ServletModule {
 
     @Provides @Singleton
     EC2MemcachedStorage provideEC2MemcachedStorage(S3Storage s3Storage, AmazonEC2 amazonEC2) throws IOException {
-        return provideCloseable(new EC2MemcachedStorage(s3Storage, "~", 864000, amazonEC2, properties.getProperty("memcached.ec2-pool.securityGroup"), Integer.parseInt(properties.getProperty("memcached.port")), Integer.parseInt(properties.getProperty("memcached.ec2-poll.pollIntervalMinutes"))));
+        return provideCloseable(new EC2MemcachedStorage(s3Storage, "~", 864000, amazonEC2, properties.getProperty("memcached.ec2-pool.securityGroup"), Integer.parseInt(properties.getProperty("memcached.ec2-pool.port")), Integer.parseInt(properties.getProperty("memcached.ec2-pool.pollIntervalMinutes"))));
     }
 
     @Provides @Singleton

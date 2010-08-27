@@ -22,6 +22,7 @@ memcached.port=11211
 # Amazon EC2 memcached pool
 memcached.ec2-pool.securityGroup=
 memcached.ec2-pool.pollIntervalMinutes=
+memcached.ec2-pool.port=11211
 
 # Filesystem storage
 storage.dir=/tmp/rideapp
