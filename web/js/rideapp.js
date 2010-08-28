@@ -338,7 +338,7 @@ try {
         if (yourTracksDone) {
             for (var i = 0; i < info.rivals.length; i++) {
                 for (var j = Math.max(0, info.rivals[i].tracks.length - info.maxTracks); j < info.rivals[i].tracks.length; j++) {
-                    var id = info.rivals[i].id + "/track/" + info.rivals[i].tracks[j];
+                    var id = info.rivals[i].user.id + "/track/" + info.rivals[i].tracks[j];
                     if (!tracks[id]) {
                         trackToFetch = id;
                         fetchUri = "/rest/rival/" + id;
@@ -395,17 +395,23 @@ try {
             $(td).addClass("courseOwner");
             var span = document.createElement("span");
             $(td).append(span);
+            $(span).addClass("user");
             $(span).text(user.name);
+            $(span).attr("title","Go to rival");
+            $(span).click(function() {
+                document.location = contextPath+"/user/"+user.id;
+            });
             var button = document.createElement("input");
-            $(td).append(button);
             $(button).attr("type", "button");
             $(button).val("Copy course");
-            if (info.course.length >= info.maxCourses) {
+            $(td).append(button);
+            if (info.courses.length >= info.maxCourses) {
                 $(button).attr("disabled", "true");
             } else {
                 $(button).click(function() {
                     $("#courseAddCourse").hide();
                     $("#courseBusy").show();
+                    course.points.toJSON = 0; // Hack because Prototype framework required by Garmin screws up JSON.stringify by adding Array.prototype.toJSON.
                     ajax("POST", "/rest/course", function(newCourse) {
                         info.courses.push(newCourse);
                         setCourses();
@@ -423,14 +429,14 @@ try {
         for (var i = 0; i < info.rivals.length; i++) {
             var rival = info.rivals[i];
             for (var j = 0; j < rival.tracks.length; j++)
-                formatCourseData(tbody, course, tracks[rival.user.id + "/" + rival.tracks[j]], rival.user);
+                formatCourseData(tbody, course, tracks[rival.user.id + "/track/" + rival.tracks[j]], rival.user);
         }
     }
 
     function formatCourseData(tbody, course, track, user) {
         if (!track)
             return;
-        var id = user ? user.id + "/" + course.id : course.id;
+        var id = user ? user.id + "/track/" + course.id : course.id;
         var data = track[id];
         if (!data)
             data = track[id] = rideapp.findCourses(track.pts, course, info.userInfo.checkpointRadius);
@@ -540,7 +546,7 @@ try {
             $(span).addClass("user");
             if (user) {
                 $(span).text(user.name);
-                $(span).attr("title", "Go to " + user.name);
+                $(span).attr("title","Go to rival");
                 $(span).click(function() {
                     document.location = contextPath+"/user/"+user.id;
                 });
@@ -621,7 +627,7 @@ try {
                     $(td).addClass("chooseItem");
                     $(td).click((function(rivalId) {
                         return function() {
-                            window.open(contextPath+"/user/"+rivalId);
+                            document.location = contextPath+"/user/"+rivalId;
                         };
                     })(info.rivals[i].user.id));
                 }
