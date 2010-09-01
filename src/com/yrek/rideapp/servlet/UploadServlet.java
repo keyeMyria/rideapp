@@ -38,6 +38,7 @@ public class UploadServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        String lastTime = request.getParameter("lastTime");
         String uploadStatus = "error";
         boolean isFile = true;
         try {
@@ -49,7 +50,7 @@ public class UploadServlet extends HttpServlet {
             if (user == null)
                 uploadStatus = "sessionexpired";
             else
-                uploadStatus = doUpload(in, user.getId());
+                uploadStatus = doUpload(in, user.getId(), lastTime);
         } catch (Exception e) {
             LOG.log(Level.SEVERE,"",e);
             uploadStatus = "error";
@@ -62,7 +63,7 @@ public class UploadServlet extends HttpServlet {
         }
     }
 
-    private String doUpload(InputStream in, String userId) throws Exception {
+    private String doUpload(InputStream in, String userId, final String lastTime) throws Exception {
         final int maxTrackPoints = db.getMaxTrackPoints(userId);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         final PrintStream out = new PrintStream(bytes);
@@ -101,7 +102,7 @@ public class UploadServlet extends HttpServlet {
                     time--;
                 } else if ("trkpt".equals(qName)) {
                     trkpt--;
-                    if (validTime(timeContent) && validDouble(lat) && validDouble(lon)) {
+                    if (validTime(timeContent) && (lastTime == null || lastTime.compareTo(timeContent.toString()) < 0) && validDouble(lat) && validDouble(lon)) {
                         points++;
                         if (points > maxTrackPoints) {
                             status[0] = "tracktruncated";

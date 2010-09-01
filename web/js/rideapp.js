@@ -23,10 +23,10 @@ try {
         return contextPath + path + ";jsessionid=" + sessionId;
     }
 
-    function ajax(method, path, success, error, data, contentType) {
+    function ajax(method, path, success, error, data, contentType, params) {
         $.ajax({
             type:method,
-            url:getURI(path),
+            url:getURI(path) + (params ? "?" + $.param(params) : ""),
             data:data,
             contentType:contentType,
             success:success,
@@ -35,7 +35,7 @@ try {
                     error(xhr,status);
                 } else {
                     $("#iframe-hidden").queue("refreshSessionId", function(next) {
-                        ajax(method, path, success, error, data, contentType);
+                        ajax(method, path, success, error, data, contentType, params);
                         next();
                     });
                     $("#iframe-hidden").attr("src",getURI("/refreshSession.jsp"));
@@ -249,6 +249,12 @@ try {
         if (!data.success)
             return garminStatus("Read from device failed");
         $("#garminBusyStatus").text("Uploading...");
+        var lastTime = null;
+        for (var i = 0; i < info.tracks.length; i++) {
+            var pts = tracks[info.tracks[i]].pts;
+            if (pts && pts.length > 0 && (lastTime == null || lastTime < pts[pts.length-1].t))
+                lastTime = pts[pts.length-1].t;
+        }
         ajax("POST", "/rest/upload", function(status) {
             if (status == "ok")
                 garminStatus("Upload succeeded");
@@ -263,7 +269,7 @@ try {
             });
         }, function(xhr, status) {
             garminStatus("Upload failed: " + xhr.statusText);
-        }, data.controller.gpsDataString, "application/gpx");
+        }, data.controller.gpsDataString, "application/gpx", lastTime ? {lastTime:lastTime} : null);
     }
 
     function garminStatus(message) {
