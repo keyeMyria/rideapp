@@ -43,7 +43,7 @@ public class OAuth2 {
                 if (authorizationDeniedForward != null)
                     request.getRequestDispatcher(authorizationDeniedForward).forward(request, response);
                 else
-                    response.sendRedirect(response.encodeRedirectURL(oAuth2Client.getAuthorizationDeniedRedirect(request)));
+                    response.sendRedirect(encodeRedirectURL(response, oAuth2Client.getAuthorizationDeniedRedirect(request)));
                 return;
             }
 
@@ -51,7 +51,7 @@ public class OAuth2 {
             LOG.fine("accessToken="+accessToken);
             oAuth2Session.saveAccessToken(request, response, accessToken);
             oAuth2Session.clearReturnURI(request, response);
-            response.sendRedirect(response.encodeRedirectURL(returnURI != null ? returnURI : request.getContextPath()));
+            response.sendRedirect(encodeRedirectURL(response, returnURI != null ? returnURI : request.getContextPath()));
         }
     }
 
@@ -89,12 +89,21 @@ public class OAuth2 {
                 if (authorizeForward != null)
                     request.getRequestDispatcher(authorizeForward).forward(request, response);
                 else
-                    response.sendRedirect(response.encodeRedirectURL(oAuth2Client.getAuthorizeRedirect(request, redirectURL)));
+                    response.sendRedirect(encodeRedirectURL(response, oAuth2Client.getAuthorizeRedirect(request, redirectURL)));
             }
         }
 
         private String getRedirectURL(HttpServletRequest request, HttpServletResponse response) throws MalformedURLException {
             return new URL(new URL(request.getRequestURL().toString()), response.encodeRedirectURL(request.getContextPath() + "/oauth2")).toString();
         }
+    }
+
+    private static String encodeRedirectURL(HttpServletResponse response, String url) {
+        // Google AppEngine/Jetty spuriously adds ;jsessionid=sessionid to external URLs
+        int colon = url.indexOf(':');
+        int slash = url.indexOf('/');
+        if (colon > 0 && slash > 0 && colon < slash)
+            return url;
+        return response.encodeRedirectURL(url);
     }
 }

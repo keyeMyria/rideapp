@@ -33,6 +33,18 @@
             <classpath refid="build-classpath"/>
             <compilerarg value="-Xlint"/>
         </javac>
+        <java classname="com.google.appengine.tools.enhancer.Enhance" fork="yes">
+            <arg value="${build.dir}/classes/com/yrek/rideapp/storage/JDOStorage$File.class"/>
+            <classpath>
+                <pathelement location="${build.dir}/classes"/>
+                <fileset dir="${appengine.dir}/lib">
+                    <include name="appengine-tools-api.jar"/>
+                </fileset>
+                <fileset dir="${appengine.dir}/lib/user">
+                    <include name="appengine-api-*.jar"/>
+                </fileset>
+            </classpath>
+        </java>
     </target>
 
     <target name="jar" depends="compile">
@@ -69,5 +81,14 @@
 
     <target name="deploy" depends="war">
         <copy file="${dist.dir}/${target}.war" todir="${tomcat.dir}/webapps"/>
+    </target>
+
+    <target name="deploy-appengine" depends="war">
+        <delete dir="${dist.dir}/${target}"/>
+        <mkdir dir="${dist.dir}/${target}"/>
+        <exec executable="jar" dir="${dist.dir}/${target}">
+            <arg value="xf"/>
+            <arg value="../${target}.war"/>
+        </exec>
     </target>
 </project>

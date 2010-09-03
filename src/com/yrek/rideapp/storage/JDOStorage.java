@@ -13,6 +13,8 @@ import javax.jdo.annotations.PersistenceCapable;
 import javax.jdo.annotations.Persistent;
 import javax.jdo.annotations.PrimaryKey;
 
+import com.google.appengine.api.datastore.Blob;
+
 public class JDOStorage implements Storage {
     private static final Logger LOG = Logger.getLogger(JDOStorage.class.getName());
 
@@ -22,7 +24,7 @@ public class JDOStorage implements Storage {
     static class File {
         @PrimaryKey @Persistent String path;
         @Persistent String dir;
-        @Persistent byte[] content;
+        @Persistent Blob content;
     }
 
     public String[] listFiles(String dir) {
@@ -48,7 +50,7 @@ public class JDOStorage implements Storage {
     public byte[] readFile(String path) {
         PersistenceManager persistenceManager = persistenceManagerFactory.getPersistenceManager();
         try {
-            return persistenceManager.getObjectById(File.class, path).content;
+            return persistenceManager.getObjectById(File.class, path).content.getBytes();
         } catch (JDOObjectNotFoundException e) {
             return null;
         } finally {
@@ -70,7 +72,7 @@ public class JDOStorage implements Storage {
         File file = new File();
         file.path = path;
         file.dir = getDir(path);
-        file.content = content;
+        file.content = new Blob(content);
         PersistenceManager persistenceManager = persistenceManagerFactory.getPersistenceManager();
         try {
             persistenceManager.makePersistent(file);
@@ -80,6 +82,6 @@ public class JDOStorage implements Storage {
     }
 
     private String getDir(String path) {
-        return path.substring(0, path.lastIndexOf('/'));
+        return path.substring(0, path.lastIndexOf('/')+1);
     }
 }

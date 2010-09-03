@@ -76,18 +76,29 @@ abstract class BaseModule extends ServletModule {
         serve("/oauth2").with(OAuth2Servlet.class);
         // Stupid Guice bugs 455/522
         // serve("/user/*").with(UserServlet.class); 
-        filter("/index.jsp","/refreshSession.jsp").through(OAuth2Filter.class);
-        filter("/index.jsp","/refreshSession.jsp").through(SetAttributesFilter.class);
+        filter("/","/index.jsp","/refreshSession.jsp").through(OAuth2Filter.class);
+        filter("/","/index.jsp","/refreshSession.jsp").through(SetAttributesFilter.class);
         filter("/rest/*").through(RESTAuthFilter.class);
         serve("/ping").with(PingServlet.class);
         serve("/rest/upload").with(UploadServlet.class);
         serve("/rest/*").with(GuiceContainer.class, jerseyParams());
+        // Some bizarre Google appengine/jetty/guice interaction causes
+        // / to redirect to //, ///, ////, etc.
+        serve("/").with(RedirectToIndexJSP.class);
+    }
+
+    @Singleton
+    public static class RedirectToIndexJSP extends javax.servlet.http.HttpServlet {
+        private static final long serialVersionUID = 0L;
+        @Override
+        protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, java.io.IOException {
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }
     }
 
     protected HashMap<String,String> jerseyParams() {
         HashMap<String,String> properties = new HashMap<String,String>();
         properties.put("com.sun.jersey.spi.container.ContainerRequestFilters", LoggingFilter.class.getName());
-        properties.put("com.sun.jersey.spi.container.ContainerResponseFilters", LoggingFilter.class.getName());
         return properties;
     }
 

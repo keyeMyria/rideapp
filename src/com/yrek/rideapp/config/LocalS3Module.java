@@ -21,11 +21,4 @@ class LocalS3Module extends BaseModule {
         bind(OAuth2Session.class).to(FacebookOAuth2Session.class);
         bind(Storage.class).to(MemcachedStorage.class);
     }
-
-    @Override
-    protected HashMap<String,String> jerseyParams() {
-        HashMap<String,String> properties = super.jerseyParams();
-        properties.remove("com.sun.jersey.spi.container.ContainerResponseFilters");
-        return properties;
-    }
 }
