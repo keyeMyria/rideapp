@@ -22,6 +22,7 @@ class LocalS3Module extends BaseModule {
         bind(Storage.class).to(MemcachedStorage.class);
     }
 
+    @Override
     protected HashMap<String,String> jerseyParams() {
         HashMap<String,String> properties = super.jerseyParams();
         properties.remove("com.sun.jersey.spi.container.ContainerResponseFilters");
