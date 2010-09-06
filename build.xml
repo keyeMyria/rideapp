@@ -33,6 +33,9 @@
             <classpath refid="build-classpath"/>
             <compilerarg value="-Xlint"/>
         </javac>
+    </target>
+
+    <target name="jdoenhance" depends="compile">
         <java classname="com.google.appengine.tools.enhancer.Enhance" fork="yes">
             <arg value="${build.dir}/classes/com/yrek/rideapp/storage/JDOStorage$File.class"/>
             <classpath>
@@ -47,7 +50,7 @@
         </java>
     </target>
 
-    <target name="jar" depends="compile">
+    <target name="jar" depends="compile,jdoenhance">
         <jar jarfile="${build.dir}/${ant.project.name}.jar"
              basedir="${build.dir}/classes"/>
     </target>
@@ -83,12 +86,30 @@
         <copy file="${dist.dir}/${target}.war" todir="${tomcat.dir}/webapps"/>
     </target>
 
-    <target name="deploy-appengine" depends="war">
+    <target name="deploy-local-appengine" depends="war">
         <delete dir="${dist.dir}/${target}"/>
         <mkdir dir="${dist.dir}/${target}"/>
         <exec executable="jar" dir="${dist.dir}/${target}">
             <arg value="xf"/>
             <arg value="../${target}.war"/>
         </exec>
+    </target>
+
+    <target name="deploy-appspot" depends="war">
+        <delete dir="${dist.dir}/${target}"/>
+        <mkdir dir="${dist.dir}/${target}"/>
+        <exec executable="jar" dir="${dist.dir}/${target}">
+            <arg value="xf"/>
+            <arg value="../${target}.war"/>
+        </exec>
+        <java classname="com.google.appengine.tools.admin.AppCfg" fork="yes">
+            <arg value="update"/>
+            <arg value="${dist.dir}/${target}"/>
+            <classpath>
+                <fileset dir="${appengine.dir}/lib">
+                    <include name="appengine-tools-api.jar"/>
+                </fileset>
+            </classpath>
+        </java>
     </target>
 </project>
