@@ -2,6 +2,8 @@ package com.yrek.rideapp.config;
 
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -17,6 +19,7 @@ import com.yrek.rideapp.storage.Storage;
 class LocalAppEngineModule extends BaseModule {
     LocalAppEngineModule(Properties properties) {
         super(properties);
+        Logger.getLogger("com.yrek").setLevel(Level.FINE);
     }
 
     @Override
