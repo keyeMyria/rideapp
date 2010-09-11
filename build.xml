@@ -87,7 +87,6 @@
     </target>
 
     <target name="deploy-local-appengine" depends="war">
-        <delete dir="${dist.dir}/${target}"/>
         <mkdir dir="${dist.dir}/${target}"/>
         <exec executable="jar" dir="${dist.dir}/${target}">
             <arg value="xf"/>
