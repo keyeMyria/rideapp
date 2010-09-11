@@ -365,7 +365,7 @@ try {
                     setTracks();
                 setMainContent();
                 if (!info.home && map.getZoom() == 3) {
-                    map.setCenter(new google.maps.LatLng(pts[0].lat, pts[0].lon));
+                    map.setCenter(new google.maps.LatLng(trackData[0].lat, trackData[0].lon));
                     map.setZoom(12);
                 }
             };
