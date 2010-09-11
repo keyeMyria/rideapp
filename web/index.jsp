@@ -23,13 +23,12 @@
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
 <script type="text/javascript" src="http://connect.facebook.net/en_US/all.js"></script>
-<script type="text/javascript">FB.init({appId:"${facebookApplicationId}"})</script>
 
 <script src="${pageContext.request.contextPath}/js/rideapp-util.js" type="text/javascript"></script>
 <script src="${pageContext.request.contextPath}/js/rideapp.js" type="text/javascript"></script>
 
 </head>
-<body id="body" onload="rideapp.initUserPage('${pageContext.request.contextPath}','${sessionId}', ${garminUnlock})">
+<body id="body" onload="FB.init({appId:'${facebookApplicationId}',cookie:true,status:true});rideapp.initUserPage('${pageContext.request.contextPath}','${sessionId}',${garminUnlock},'${facebookCanvasURL}','${sessionScope.user.id}')">
 <iframe id="iframe-hidden" style="position:absolute; top:0px; left:0px; width: 0px; height: 0px; border: none;"></iframe>
 
 <table><tbody><tr><td valign="top">

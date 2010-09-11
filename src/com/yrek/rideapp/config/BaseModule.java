@@ -119,7 +119,7 @@ abstract class BaseModule extends ServletModule {
 
     @Provides @Singleton
     SetAttributesFilter provideSetAttributesFilter(FacebookClient facebookClient) {
-        return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"), properties.getProperty("facebook.clientID"));
+        return new SetAttributesFilter(facebookClient, properties.getProperty("garmin.garminUnlock"), properties.getProperty("facebook.clientID"), properties.getProperty("facebook.canvasURL"));
     }
 
     @Provides @Singleton

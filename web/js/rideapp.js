@@ -7,6 +7,8 @@ try {
     var contextPath;
     var sessionId;
     var garminUnlock;
+    var canvasURL;
+    var userId;
 
     var resizer = function () { if (FB && FB.Canvas) FB.Canvas.setSize(); };
 
@@ -52,10 +54,12 @@ try {
         return timestamp;
     }
 
-    function initUserPage(initContextPath, initSessionId, initGarminUnlock) {
+    function initUserPage(initContextPath, initSessionId, initGarminUnlock, initCanvasURL, initUserId) {
         contextPath = initContextPath;
         sessionId = initSessionId;
         garminUnlock = initGarminUnlock;
+        canvasURL = initCanvasURL;
+        userId = initUserId;
 
         initUploadFile();
         initGarmin();
@@ -392,21 +396,19 @@ try {
         $(td).text(course.name);
         $(td).click(function() { setOverlays(course); fitMapToCourse(course); });
         if (!user) {
-            $(td).attr("colspan","7");
+            $(td).attr("colspan","8");
         } else {
             $(td).attr("colspan","4");
             td = document.createElement("td");
             $(tr).append(td);
-            $(td).attr("colspan","3");
+            $(td).attr("colspan","4");
             $(td).addClass("courseOwner");
-            var span = document.createElement("span");
-            $(td).append(span);
-            $(span).addClass("user");
-            $(span).text(user.name);
-            $(span).attr("title","Go to rival");
-            $(span).click(function() {
-                document.location = contextPath+"/user/"+user.id;
-            });
+            var a = document.createElement("a");
+            $(td).append(a);
+            $(a).addClass("user");
+            $(a).text(user.name);
+            $(a).attr("title","Go to rival");
+            $(a).attr("href",contextPath+"/user/"+user.id);
             var button = document.createElement("input");
             $(button).attr("type", "button");
             $(button).val("Copy course");
@@ -512,6 +514,7 @@ try {
                     $(td).click(clickRight);
                     td = document.createElement("td");
                     $(lastRow).append(td);
+                    $(td).attr("colspan","2");
                     $(td).text(rideapp.formatSpeed(dist,t-tlast));
                     $(td).click(clickRight);
                 }
@@ -520,7 +523,7 @@ try {
             }
             td = document.createElement("td");
             $(lastRow).append(td);
-            $(td).attr("colspan", "3");
+            $(td).attr("colspan", "4");
 
             td = document.createElement("td");
             $(trhead).append(td);
@@ -575,6 +578,19 @@ try {
             $(trhead).append(td);
             $(td).text(rideapp.formatSpeed(totalDist, t-tstart));
             $(td).click(onclick);
+            td = document.createElement("td");
+            $(trhead).append(td);
+            if (sessionId && canvasURL) {
+                var img = document.createElement("img");
+                $(td).append(img);
+                $(img).attr("src",contextPath+"/img/icon16.png");
+                $(img).attr("title","Share");
+                $(img).click((function(course,dt,dist) {
+                    return function() {
+                        FB.ui({method:"stream.publish",display:"popup",attachment:{name:course.name,caption:rideapp.formatDuration(dt)+" ("+rideapp.formatSpeed(dist,dt)+")",href:canvasURL+"user/"+userId,media:[{type:"image",href:canvasURL,src:location.protocol+"//"+location.host+contextPath+"/img/icon.jpeg"}]},user_message_prompt:"Add your comments"});
+                    };
+                })(course,t-tstart,totalDist));
+            }
         }
     }
 
@@ -628,14 +644,18 @@ try {
                 $("#rivalList").append(tr);
                 var td = document.createElement("td");
                 $(tr).append(td);
-                $(td).text(info.rivals[i].user.name);
                 if (info.rivals[i].userInfo) {
-                    $(td).addClass("chooseItem");
-                    $(td).click((function(rivalId) {
-                        return function() {
-                            document.location = contextPath+"/user/"+rivalId;
-                        };
-                    })(info.rivals[i].user.id));
+                    var a = document.createElement("a");
+                    $(td).append(a);
+                    $(a).attr("href", contextPath+"/user/"+info.rivals[i].user.id);
+                    var img = document.createElement("img");
+                    $(a).append(img);
+                    $(img).attr("src", contextPath+"/img/icon16.png");
+                    var span = document.createElement("span");
+                    $(td).append(span);
+                    $(span).text(info.rivals[i].user.name);
+                } else {
+                    $(td).text(info.rivals[i].user.name);
                 }
                 td = document.createElement("td");
                 $(tr).append(td);

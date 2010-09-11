@@ -25,12 +25,14 @@ public class SetAttributesFilter implements Filter {
     private final FacebookClient facebookClient;
     private final String garminUnlock;
     private final String facebookApplicationId;
+    private final String facebookCanvasURL;
 
     @Inject
-    public SetAttributesFilter(FacebookClient facebookClient, String garminUnlock, String facebookApplicationId) {
+    public SetAttributesFilter(FacebookClient facebookClient, String garminUnlock, String facebookApplicationId, String facebookCanvasURL) {
         this.facebookClient = facebookClient;
         this.garminUnlock = garminUnlock;
         this.facebookApplicationId = facebookApplicationId;
+        this.facebookCanvasURL = facebookCanvasURL;
     }
 
     @Override
@@ -51,6 +53,7 @@ public class SetAttributesFilter implements Filter {
         }
         request.setAttribute("garminUnlock", garminUnlock);
         request.setAttribute("facebookApplicationId", facebookApplicationId);
+        request.setAttribute("facebookCanvasURL", facebookCanvasURL);
         filterChain.doFilter(request, response);
     }
 }
