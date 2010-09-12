@@ -585,11 +585,12 @@ try {
                 $(td).append(img);
                 $(img).attr("src",contextPath+"/img/icon16.png");
                 $(img).attr("title","Share");
-                $(img).click((function(course,dt,dist) {
+                $(img).click((function(course,dt,dist,pts,startIndex,endIndex) {
                     return function() {
-                        FB.ui({method:"stream.publish",display:"popup",attachment:{name:course.name,caption:rideapp.formatDuration(dt)+" ("+rideapp.formatSpeed(dist,dt)+")",href:canvasURL+"user/"+userId,media:[{type:"image",href:canvasURL,src:location.protocol+"//"+location.host+contextPath+"/img/icon.jpeg"}]},user_message_prompt:"Add your comments"});
+                        var mapURL = "http://maps.google.com/maps/api/staticmap?sensor=false&size=90x90&path=weight:3|color:0xff00ffe6|enc:" + encodeURIComponent(rideapp.encodePolyline(pts, startIndex, endIndex+1, Math.ceil((endIndex+1-startIndex)/40)));
+                        FB.ui({method:"stream.publish",display:"popup",attachment:{name:course.name,caption:rideapp.formatDuration(dt)+" ("+rideapp.formatSpeed(dist,dt)+")",href:canvasURL+"user/"+userId,media:[{type:"image",href:canvasURL,src:mapURL}]},user_message_prompt:"Add your comments"});
                     };
-                })(course,t-tstart,totalDist));
+                })(course,t-tstart,totalDist,track.pts,data[i][0],data[i][data[i].length-1]));
             }
         }
     }

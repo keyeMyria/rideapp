@@ -91,6 +91,31 @@ try {
         return (h>0?h+":":"")+(m<10&&h>0?"0":"")+(m+":")+(s<10?"0":"")+s;
     }
 
+    function encodePolyline(track, firstIndex, lastIndex, interval) {
+        var lastPt = track[firstIndex];
+        var encoded = encodePolylineNumber(lastPt.lat)+encodePolylineNumber(lastPt.lon);
+        for (var i = firstIndex + interval; i < lastIndex; i += interval) {
+            encoded += encodePolylineNumber(track[i].lat - lastPt.lat) + encodePolylineNumber(track[i].lon - lastPt.lon);
+            lastPt = track[i];
+        }
+        return encoded;
+    }
+
+    function encodePolylineNumber(x) {
+        var d = Math.round(x*100000) << 1;
+        if (x < 0)
+            d = ~d;
+        var encoded = "";
+        while (d != 0) {
+            var c = d & 0x1f;
+            d >>>= 5;
+            if (d != 0)
+                c |= 0x20;
+            encoded += String.fromCharCode(c + 63);
+        }
+        return encoded;
+    }
+
     rideapp.dist = dist;
     rideapp.integrateDist = integrateDist;
     rideapp.findCourses = findCourses;
@@ -100,4 +125,5 @@ try {
     rideapp.formatDate = formatDate;
     rideapp.formatTime = formatTime;
     rideapp.formatDuration = formatDuration;
+    rideapp.encodePolyline = encodePolyline;
 })(rideapp);
