@@ -1,3 +1,7 @@
+body {
+    overflow: hidden;
+}
+
 .widget {
     width: 240px;
     background-color: #ddf;
