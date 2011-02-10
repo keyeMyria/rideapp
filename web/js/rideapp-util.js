@@ -17,6 +17,48 @@ try {
         return 2*EARTH_RADIUS*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
+    function interpolateNearest(pt1, pt2, targetPt) {
+        // ptNearest = { lat: pt1.lat*t + pt2.lat*(1-t),
+        //               lon: pt1.lon*t + pt2.lon*(1-t) }
+        // if 0 < t < 1, then the nearest point is between the two points
+        // Applying these approximations:
+        // cos(x) ~ cos(x + delta)
+        // sin(x) ~ sin(x + delta)
+        // cos(delta) ~ 1
+        // sin(delta) ~ delta
+        // and assuming no mistakes:
+        var cos = Math.cos(targetPt.lat*Math.PI/180);
+        var sin = Math.sin(targetPt.lat*Math.PI/180);
+        var dlat = (pt1.lat - pt2.lat)*Math.PI/180;
+        var dlon = (pt1.lon - pt2.lon)*Math.PI/180;
+        var dlat0 = (targetPt.lat - pt2.lat)*Math.PI/180;
+        var dlon0 = (targetPt.lon - pt2.lon)*Math.PI/180;
+        var a = 4*cos*sin*dlon*dlon*dlat;
+        var b = 2*dlat*dlat + 2*cos*sin*dlon0*dlon*dlat + 2*cos*cos*dlon*dlon;
+        var c = 2*dlat0*dlat + cos*sin*dlon0*dlon0*dlat;
+        var d = b*b - 4*a*c;
+        if (d < 0)
+            return -1;
+        var e = Math.sqrt(d);
+        var t = (-b+e)/(2*a);
+        if (t < 0 || t > 1)
+            t = (-b-e)/(2*a);
+        return t;
+    }
+
+    function passesCheckPoint(pt, lastPt, checkPt, checkPointRadius) {
+        var dlast = dist(checkPt, lastPt);
+        var d = dist(checkPt, pt);
+        if (dlast >= checkPointRadius && d < checkPointRadius)
+            return true;
+        if (dlast < checkPointRadius)
+            return false;
+        var t = interpolateNearest(pt, lastPt, checkPt);
+        if (t <= 0 || t >= 1)
+            return false;
+        return dist(checkPt, { lat:pt.lat*t + lastPt.lat*(1-t), lon:pt.lon*t + lastPt.lon*(1-t) }) < checkPointRadius;
+    }
+
     function integrateDist(track, firstIndex, lastIndex) {
         var d = 0.0;
         for (var i = firstIndex; i < lastIndex; i++)
@@ -37,7 +79,7 @@ try {
             } else {
                 for (var j = 0; j < pending.length; j++) {
                     var checkPt = course.points[pending[j].length % course.points.length];
-                    if (dist(checkPt, lastPt) >= checkPointRadius && dist(checkPt, pt) < checkPointRadius)
+                    if (passesCheckPoint(pt, lastPt, checkPt, checkPointRadius))
                         pending[j].push(i);
                 }
                 for (var j = pending.length - 1; j >= 0; j--)
