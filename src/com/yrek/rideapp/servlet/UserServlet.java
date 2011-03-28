@@ -31,6 +31,11 @@ public class UserServlet extends HttpServlet {
     public static DB db;
 
     @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        doGet(request, response);
+    }
+
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         String userId = request.getPathInfo();
         if (userId != null)

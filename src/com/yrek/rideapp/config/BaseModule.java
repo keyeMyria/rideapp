@@ -90,8 +90,14 @@ abstract class BaseModule extends ServletModule {
     @Singleton
     public static class RedirectToIndexJSP extends javax.servlet.http.HttpServlet {
         private static final long serialVersionUID = 0L;
+
         @Override
         protected void doGet(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, java.io.IOException {
+            request.getRequestDispatcher("/index.jsp").forward(request, response);
+        }
+
+        @Override
+        protected void doPost(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response) throws javax.servlet.ServletException, java.io.IOException {
             request.getRequestDispatcher("/index.jsp").forward(request, response);
         }
     }

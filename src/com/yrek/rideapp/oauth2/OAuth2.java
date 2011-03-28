@@ -33,6 +33,11 @@ public class OAuth2 {
         private OAuth2Session oAuth2Session;
 
         @Override
+        protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+            doGet(request, response);
+        }
+
+        @Override
         protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
             String code = request.getParameter("code");
             String returnURI = oAuth2Session.getReturnURI(request);
@@ -79,7 +84,7 @@ public class OAuth2 {
             LOG.fine("accessToken="+accessToken+",requestURL="+request.getRequestURL()+",pathInfo="+request.getPathInfo());
             if (accessToken != null && System.currentTimeMillis() < accessToken.getExpiresAt()) {
                 filterChain.doFilter(request, response);
-            } else if (!"GET".equals(request.getMethod())) {
+            } else if (!"GET".equals(request.getMethod()) && !"POST".equals(request.getMethod())) {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
             } else {
                 oAuth2Session.saveReturnURI(request, response, oAuth2Client.getReturnURI(request, request.getRequestURI() + (request.getQueryString() != null ? "?" + request.getQueryString() : "")));
